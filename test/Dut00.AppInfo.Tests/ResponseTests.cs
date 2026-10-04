@@ -62,21 +62,11 @@ public sealed class ResponseTests
     [Fact]
     public async Task WithOwner_WritesOwner()
     {
-        await using var app = await TestApp.StartAsync(b => b.Services.AddAppInfo().WithOwner(o => o.Owner = "red_team@company.com"));
+        await using var app = await TestApp.StartAsync(b => b.Services.AddAppInfo().WithOwner("red_team@company.com"));
 
         var json = await app.GetAppInfoAsync();
 
         json.GetProperty("Owner").GetString().ShouldBe("red_team@company.com");
-    }
-
-    [Fact]
-    public async Task WithOwner_WithoutValue_WritesNull()
-    {
-        await using var app = await TestApp.StartAsync(b => b.Services.AddAppInfo().WithOwner(_ => { }));
-
-        var json = await app.GetAppInfoAsync();
-
-        json.GetProperty("Owner").ValueKind.ShouldBe(JsonValueKind.Null);
     }
 
     [Fact]
@@ -133,7 +123,7 @@ public sealed class ResponseTests
     {
         await using var app = await TestApp.StartAsync(b => b.Services.AddAppInfo()
             .WithProperty("Zeta", 1)
-            .WithOwner(o => o.Owner = "owner")
+            .WithOwner("owner")
             .WithContributor<TwoKeysContributor>()
             .WithProperty("Alpha", 2));
 

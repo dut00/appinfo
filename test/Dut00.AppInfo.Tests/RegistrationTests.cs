@@ -28,11 +28,11 @@ public sealed class RegistrationTests
         var services = new ServiceCollection();
 
         services.AddAppInfo()
-            .WithOwner(o => o.Owner = "first")
-            .WithOwner(o => o.Owner = "second");
+            .WithOwner("first")
+            .WithOwner("second");
 
         ContributorDescriptors(services).Count(d => d.ImplementationType == typeof(OwnerAppInfoContributor)).ShouldBe(1);
-        services.BuildServiceProvider().GetRequiredService<IOptions<OwnerOptions>>().Value.Owner.ShouldBe("second");
+        services.BuildServiceProvider().GetRequiredService<IOptions<OwnerAppInfoOptions>>().Value.Owner.ShouldBe("second");
     }
 
     [Fact]
@@ -58,6 +58,17 @@ public sealed class RegistrationTests
 
         var descriptor = ContributorDescriptors(services).Where(d => d.ImplementationType == typeof(NoOpContributor)).ShouldHaveSingleItem();
         descriptor.Lifetime.ShouldBe(ServiceLifetime.Scoped);
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public void WithOwner_InvalidOwner_Throws(string? owner)
+    {
+        var builder = new ServiceCollection().AddAppInfo();
+
+        Should.Throw<ArgumentException>(() => builder.WithOwner(owner!)).ParamName.ShouldBe("owner");
     }
 
     [Theory]
@@ -96,8 +107,7 @@ public sealed class RegistrationTests
         var builder = new ServiceCollection().AddAppInfo();
 
         Should.Throw<ArgumentNullException>(() => ((IServiceCollection)null!).AddAppInfo());
-        Should.Throw<ArgumentNullException>(() => builder.WithOwner(null!));
-        Should.Throw<ArgumentNullException>(() => ((IAppInfoBuilder)null!).WithOwner(_ => { }));
+        Should.Throw<ArgumentNullException>(() => ((IAppInfoBuilder)null!).WithOwner("owner"));
         Should.Throw<ArgumentNullException>(() => ((IAppInfoBuilder)null!).WithProperty("Key", "value"));
         Should.Throw<ArgumentNullException>(() => ((IAppInfoBuilder)null!).WithContributor<NoOpContributor>());
     }

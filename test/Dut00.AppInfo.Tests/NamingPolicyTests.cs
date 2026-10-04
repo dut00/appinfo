@@ -11,7 +11,7 @@ public sealed class NamingPolicyTests
     {
         await using var app = await TestApp.StartAsync(b => b.Services
             .AddAppInfo(o => o.KeyNamingPolicy = JsonNamingPolicy.CamelCase)
-            .WithOwner(o => o.Owner = "owner")
+            .WithOwner("owner")
             .WithProperty("Details", new { InnerValue = 1 })
             .WithProperty("Names", new Dictionary<string, string> { ["BillingDb"] = "x" }));
 

@@ -9,7 +9,7 @@ builder.Services.AddAppInfo()
     .WithConfigurationDetails()
     .WithEnvironmentDetails()
     .WithConnectionStrings()
-    .WithOwner(o => o.Owner = "red_team@company.com")
+    .WithOwner("red_team@company.com")
     .WithProperty("AssetId", "AST-008821")
     .WithProperty("Team", "red");
 

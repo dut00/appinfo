@@ -77,7 +77,7 @@ Depends only on `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
   - `Environment` from `EnvironmentName`
   - `IsProduction` from `IsProduction()`
 - Builder extensions in core:
-  - `WithOwner(Action<OwnerOptions>)` adds the `Owner` key.
+  - `WithOwner(string owner)` adds the `Owner` key. The last call wins.
   - `WithProperty(string key, object? value)` and `WithProperty(string key, Func<IServiceProvider, object?> factory)` add custom fields through `DelegateAppInfoContributor`.
   - `WithContributor<T>() where T : class, IAppInfoContributor` is the hook for third-party extensions.
 - `MapAppInfo(this IEndpointRouteBuilder, string pattern = "/appinfo")`:

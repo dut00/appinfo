@@ -13,17 +13,18 @@ public static class AppInfoBuilderExtensions
     /// Adds the <c>Owner</c> field.
     /// </summary>
     /// <remarks>
-    /// Safe to call more than once: the field is added once and every <paramref name="configure"/> delegate is applied.
+    /// Safe to call more than once: the field is added once and the last value wins.
     /// </remarks>
     /// <param name="builder">The AppInfo builder.</param>
-    /// <param name="configure">Sets <see cref="OwnerOptions.Owner"/>.</param>
+    /// <param name="owner">Who owns the application, for example a team name or a contact e-mail address.</param>
     /// <returns>The same builder, for chaining.</returns>
-    public static IAppInfoBuilder WithOwner(this IAppInfoBuilder builder, Action<OwnerOptions> configure)
+    /// <exception cref="ArgumentException"><paramref name="owner"/> is <see langword="null"/>, empty or whitespace.</exception>
+    public static IAppInfoBuilder WithOwner(this IAppInfoBuilder builder, string owner)
     {
         ArgumentNullException.ThrowIfNull(builder);
-        ArgumentNullException.ThrowIfNull(configure);
+        ArgumentException.ThrowIfNullOrWhiteSpace(owner);
 
-        builder.Services.Configure(configure);
+        builder.Services.Configure<OwnerAppInfoOptions>(o => o.Owner = owner);
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IAppInfoContributor, OwnerAppInfoContributor>());
         return builder;
     }

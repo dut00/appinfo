@@ -6,7 +6,7 @@ Adds an `/appinfo` endpoint to ASP.NET Core applications. It returns JSON descri
 using Dut00.AppInfo;
 
 builder.Services.AddAppInfo()
-    .WithOwner(o => o.Owner = "red_team@company.com")
+    .WithOwner("red_team@company.com")
     .WithProperty("Team", "red")
     .WithProperty("StartedBy", sp => sp.GetRequiredService<IMyService>().User);
 
@@ -31,7 +31,7 @@ app.MapAppInfo(); // GET /appinfo
 | Member | Adds |
 | --- | --- |
 | `AddAppInfo(o => ...)` | `ApplicationName`, `Version` (entry assembly), `Environment`, `IsProduction` |
-| `WithOwner(o => o.Owner = ...)` | `Owner` |
+| `WithOwner(owner)` | `Owner` |
 | `WithProperty(key, value)` | A custom key with a constant value |
 | `WithProperty(key, sp => ...)` | A custom key computed on every request; the factory may resolve scoped services |
 | `WithContributor<T>()` | Everything a custom `IAppInfoContributor` writes |

@@ -5,7 +5,7 @@ namespace Dut00.AppInfo.Internal;
 /// <summary>
 /// Writes the <c>Owner</c> field.
 /// </summary>
-internal sealed class OwnerAppInfoContributor(IOptions<OwnerOptions> options) : IAppInfoContributor
+internal sealed class OwnerAppInfoContributor(IOptions<OwnerAppInfoOptions> options) : IAppInfoContributor
 {
     public ValueTask ContributeAsync(AppInfoContext context, CancellationToken cancellationToken)
     {

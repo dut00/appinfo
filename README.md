@@ -66,7 +66,7 @@ builder.Services.AddAppInfo()
     .WithConfigurationDetails()
     .WithEnvironmentDetails()
     .WithConnectionStrings()
-    .WithOwner(o => o.Owner = "red_team@company.com")
+    .WithOwner("red_team@company.com")
     .WithProperty("Team", "red");
 
 var app = builder.Build();
@@ -81,7 +81,7 @@ app.Run();
 | Member | Package | Adds |
 | --- | --- | --- |
 | `AddAppInfo(o => ...)` | core | Services and the core fields. Safe to call more than once. |
-| `WithOwner(o => o.Owner = ...)` | core | `Owner` |
+| `WithOwner(owner)` | core | `Owner` |
 | `WithProperty(key, value)` | core | A custom key with a constant value. For a constant `null`, write `(object?)null`. |
 | `WithProperty(key, sp => ...)` | core | A custom key computed on every request. The factory may resolve scoped services. |
 | `WithContributor<T>()` | core | Everything a custom `IAppInfoContributor` writes |

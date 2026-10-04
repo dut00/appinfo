@@ -44,7 +44,7 @@ builder.Services.AddAppInfo(options =>
     .WithConfigurationDetails()
     .WithEnvironmentDetails()
     .WithConnectionStrings(o => o.SensitiveKeys.Add("ClientSecret"))
-    .WithOwner(o => o.Owner = "red_team@company.com")
+    .WithOwner("red_team@company.com")
     .WithProperty("Team", "red")
     .WithProperty("StartedBy", sp => sp.GetRequiredService<IMyService>().User);
 ```
@@ -52,7 +52,7 @@ builder.Services.AddAppInfo(options =>
 | Member | Package | Description |
 | --- | --- | --- |
 | `IServiceCollection.AddAppInfo(Action<AppInfoOptions>? configure = null)` | core | Registers services and core fields. Returns `IAppInfoBuilder`. Safe to call more than once: core services register once, and every `configure` delegate is applied. |
-| `IAppInfoBuilder.WithOwner(Action<OwnerOptions>)` | core | Adds `Owner`. Safe to call more than once: the field is added once and every delegate is applied. |
+| `IAppInfoBuilder.WithOwner(string owner)` | core | Adds `Owner`. A null, empty or whitespace `owner` throws `ArgumentException`. Safe to call more than once: the field is added once and the last value wins. |
 | `IAppInfoBuilder.WithProperty(string key, object? value)` | core | Adds a custom key with a constant value. A plain `null` binds to the factory overload and throws; write `(object?)null` for a constant null. A delegate value (e.g. `() => x`) throws `ArgumentException`. |
 | `IAppInfoBuilder.WithProperty(string key, Func<IServiceProvider, object?> factory)` | core | Adds a custom key whose value is computed on every request from the request's service provider. |
 | `IAppInfoBuilder.WithContributor<T>()` | core | Registers a custom `IAppInfoContributor` as scoped. Registering the same type twice has no effect. |
@@ -117,7 +117,7 @@ Errors follow ASP.NET Core defaults:
 | `Version` | string \| null | core | Entry assembly `AssemblyName.Version` | e.g. `"1.0.5.0"` |
 | `Environment` | string | core | `IHostEnvironment.EnvironmentName` | |
 | `IsProduction` | bool | core | `IHostEnvironment.IsProduction()` | |
-| `Owner` | string \| null | core (`WithOwner`) | `OwnerOptions.Owner` | Left out unless `WithOwner` is called |
+| `Owner` | string | core (`WithOwner`) | `WithOwner(owner)` | Left out unless `WithOwner` is called. Always a string: further owner details, if ever added, go in separate keys |
 | *custom* | any JSON-serializable value | core (`WithProperty`) | user value or factory | |
 | `ConfigurationsFiles` | string[] | Configuration | File-based configuration providers | Absolute physical paths, in load order |
 | `ApplicationProcessUptime` | string (TimeSpan constant format `[d.]hh:mm:ss[.fffffff]`) | Environment | now − process start time | Computed per request with the registered `TimeProvider` (`TimeProvider.System` by default). Days and fractions are left out when zero; a clock behind the start time reports `00:00:00` |
