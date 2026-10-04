@@ -1,6 +1,6 @@
 # AspNetCore.AppInfo
 
-[![CI](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml/badge.svg)](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml)
+[![CI](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml)
 
 A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core applications. Like `/healthz` for liveness, it gives operators and tools one well-known address that answers: *which application and version runs here, in which environment, who owns it, and how is it configured?*
 
