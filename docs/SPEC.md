@@ -1,6 +1,6 @@
 # AspNetCore.AppInfo – Specification
 
-Version: 0.1 (draft) · Status: accepted for v1 implementation
+Version: 0.1 (draft) · Status: v1 implemented
 
 This document defines **what** AspNetCore.AppInfo does: public API, response contract and behavior.
 **How** it is built is described in [PLAN.md](PLAN.md). The original notes are in [draft.md](draft.md).
