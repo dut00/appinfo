@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 ## Project
 
-`AspNetCore.AppInfo` is a family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the running application. GitHub repo: `dut00/aspnetcore-appinfo`.
+`Dut00.AppInfo` is a family of NuGet packages (renamed from `AspNetCore.AppInfo`, whose ID is reserved on nuget.org) that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the running application. GitHub repo: `dut00/aspnetcore-appinfo`.
 
 - [docs/SPEC.md](docs/SPEC.md) is the behavioral contract: public API, JSON fields, masking rules, edge cases. **If the code, the plan and the spec disagree, the spec wins.** Update the spec when behavior changes on purpose.
 - [docs/PLAN.md](docs/PLAN.md) holds the implementation plan and the numbered steps. Keep it current when something changes during implementation.
@@ -19,12 +19,12 @@ Guidance for Claude Code when working in this repository.
 ## Commands
 
 ```bash
-dotnet build AspNetCore.AppInfo.slnx           # builds net8.0, net9.0 and net10.0
-dotnet test --solution AspNetCore.AppInfo.slnx # tests run on net8.0 and net10.0
-dotnet run --project samples/AspNetCore.AppInfo.Sample.Api   # then GET /appinfo
+dotnet build Dut00.AppInfo.slnx           # builds net8.0, net9.0 and net10.0
+dotnet test --solution Dut00.AppInfo.slnx # tests run on net8.0 and net10.0
+dotnet run --project samples/Dut00.AppInfo.Sample.Api   # then GET /appinfo
 pwsh ./build/pack.ps1                          # packs into ./artifacts (local NuGet feed), clears cached copies
                                                # Windows PowerShell 5.1: powershell -ExecutionPolicy Bypass -File build/pack.ps1
-dotnet run --project samples/AspNetCore.AppInfo.Sample.Api -p:UseLocalPackages=true   # sample on the packed packages
+dotnet run --project samples/Dut00.AppInfo.Sample.Api -p:UseLocalPackages=true   # sample on the packed packages
 ```
 
 The SDK is pinned in `global.json` (10.0.x). The machine has the .NET 8 and .NET 10 runtimes but **not .NET 9**. net9.0 builds fine, but its tests can't run locally, so test projects target only `net8.0;net10.0`.
@@ -33,10 +33,10 @@ Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the ne
 
 ## Layout
 
-- `src/AspNetCore.AppInfo*/`: packable libraries. One package per folder; each has its own `README.md`, which goes into the package.
-- `test/AspNetCore.AppInfo*.Tests/`: xUnit v3 + Shouldly. Integration tests use `WebApplication.CreateBuilder()` with `UseTestServer()`.
-- `test/Infrastructure/`: shared test helpers (`TestApp`, log capture, JSON helpers; namespace `AspNetCore.AppInfo.Testing`), linked into every test project by `test/Directory.Build.props`. Don't copy them into a test project.
-- `samples/AspNetCore.AppInfo.Sample.Api/`: minimal API that uses the packages through ProjectReference. `-p:UseLocalPackages=true` switches it to `./artifacts`.
+- `src/Dut00.AppInfo*/`: packable libraries. One package per folder; each has its own `README.md`, which goes into the package.
+- `test/Dut00.AppInfo*.Tests/`: xUnit v3 + Shouldly. Integration tests use `WebApplication.CreateBuilder()` with `UseTestServer()`.
+- `test/Infrastructure/`: shared test helpers (`TestApp`, log capture, JSON helpers; namespace `Dut00.AppInfo.Testing`), linked into every test project by `test/Directory.Build.props`. Don't copy them into a test project.
+- `samples/Dut00.AppInfo.Sample.Api/`: minimal API that uses the packages through ProjectReference. `-p:UseLocalPackages=true` switches it to `./artifacts`.
 - `.github/`: `workflows/ci.yml` builds and tests on Linux, Windows and macOS, then packs; `workflows/release.yml` publishes to nuget.org on a `v*` tag (Trusted Publishing, `nuget` environment, `NUGET_USER` variable); `dependabot.yml` updates NuGet packages (not `Microsoft.AspNetCore.TestHost`: bump its per-TFM versions by hand), GitHub Actions and the SDK in `global.json` (within .NET 10). Tests must pass on Linux too: don't assume `\` is a path separator.
 - `assets/icon.png`: the package icon. `Directory.Build.props` adds it to every package only if the file exists.
 - `Directory.Build.props`: shared TFMs, strict compiler settings and NuGet metadata. Projects under `src/` become packable automatically.
@@ -46,9 +46,9 @@ Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the ne
 ## Conventions and gotchas
 
 - `TreatWarningsAsErrors` and `GenerateDocumentationFile` are on for `src/`, so **every public member needs an XML doc comment**. A `cref` to a type or member that doesn't exist yet fails the build; use `<c>…</c>` until it does.
-- Public extension methods live in the package's own namespace (`AspNetCore.AppInfo`, `AspNetCore.AppInfo.Environment`, …), not in `Microsoft.Extensions.DependencyInjection`. A single `using` should light up a package's API.
+- Public extension methods live in the package's own namespace (`Dut00.AppInfo`, `Dut00.AppInfo.Environment`, …), not in `Microsoft.Extensions.DependencyInjection`. A single `using` should light up a package's API.
 - Implementation details go in an `Internal` namespace and are `internal`. Test projects get access through `InternalsVisibleTo`.
 - A new field is added through an `IAppInfoContributor` registered with `TryAddEnumerable` (the one exception is `WithProperty`: all its contributors share a type, so each is added with `AddSingleton`). Contributors run in registration order, and the JSON keeps the order in which keys were first set.
-- Inside `AspNetCore.AppInfo.Environment`, write `System.Environment` in full, because the namespace shadows it.
+- Inside `Dut00.AppInfo.Environment`, write `System.Environment` in full, because the namespace shadows it.
 - Don't put `.WithName(...)` on the mapped endpoint. Endpoint names must be globally unique, so mapping `/appinfo` twice would break routing. Use `.WithDisplayName(...)` instead.
 - Masking must fail closed. If a connection string can't be parsed, mask the whole value.

@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Adds an /appinfo endpoint to ASP.NET Core applications that returns JSON describing the running application: name, version, environment, owner and custom properties.</Description>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dut00.AppInfo.Tests" />
+  </ItemGroup>
+
+</Project>

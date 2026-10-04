@@ -38,13 +38,13 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore
-        run: dotnet restore AspNetCore.AppInfo.slnx
+        run: dotnet restore Dut00.AppInfo.slnx
 
       - name: Build
-        run: dotnet build AspNetCore.AppInfo.slnx --configuration Release --no-restore
+        run: dotnet build Dut00.AppInfo.slnx --configuration Release --no-restore
 
       - name: Test
-        run: dotnet test --solution AspNetCore.AppInfo.slnx --configuration Release --no-build
+        run: dotnet test --solution Dut00.AppInfo.slnx --configuration Release --no-build
 
   pack:
     name: Pack
@@ -63,7 +63,7 @@ jobs:
         run: ./build/pack.ps1
 
       - name: Build the sample against the packed packages
-        run: dotnet build samples/AspNetCore.AppInfo.Sample.Api --configuration Release -p:UseLocalPackages=true
+        run: dotnet build samples/Dut00.AppInfo.Sample.Api --configuration Release -p:UseLocalPackages=true
 
       - uses: actions/upload-artifact@v7
         with:

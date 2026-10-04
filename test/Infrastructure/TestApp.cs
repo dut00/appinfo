@@ -3,7 +3,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Logging;
 
-namespace AspNetCore.AppInfo.Testing;
+namespace Dut00.AppInfo.Testing;
 
 /// <summary>
 /// A minimal web application running on <see cref="TestServer"/>.

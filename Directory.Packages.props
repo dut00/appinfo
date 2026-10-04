@@ -7,10 +7,10 @@
   <!-- This repo's own packages, used by the sample with -p:UseLocalPackages=true (resolved from ./artifacts).
        Conditional so tools that evaluate the repo by default (for example Dependabot) never look for them. -->
   <ItemGroup Condition="'$(UseLocalPackages)' == 'true'">
-    <PackageVersion Include="AspNetCore.AppInfo" Version="$(AppInfoPackageVersion)" />
-    <PackageVersion Include="AspNetCore.AppInfo.Configuration" Version="$(AppInfoPackageVersion)" />
-    <PackageVersion Include="AspNetCore.AppInfo.ConnectionStrings" Version="$(AppInfoPackageVersion)" />
-    <PackageVersion Include="AspNetCore.AppInfo.Environment" Version="$(AppInfoPackageVersion)" />
+    <PackageVersion Include="Dut00.AppInfo" Version="$(AppInfoPackageVersion)" />
+    <PackageVersion Include="Dut00.AppInfo.Configuration" Version="$(AppInfoPackageVersion)" />
+    <PackageVersion Include="Dut00.AppInfo.ConnectionStrings" Version="$(AppInfoPackageVersion)" />
+    <PackageVersion Include="Dut00.AppInfo.Environment" Version="$(AppInfoPackageVersion)" />
   </ItemGroup>
 
   <!-- Test dependencies -->

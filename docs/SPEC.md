@@ -1,13 +1,13 @@
-# AspNetCore.AppInfo – Specification
+# Dut00.AppInfo – Specification
 
 Version: 0.1 (draft) · Status: v1 implemented
 
-This document defines **what** AspNetCore.AppInfo does: public API, response contract and behavior.
+This document defines **what** Dut00.AppInfo does: public API, response contract and behavior.
 **How** it is built is described in [PLAN.md](PLAN.md). The original notes are in [draft.md](draft.md).
 
 ## 1. Purpose
 
-AspNetCore.AppInfo adds an HTTP endpoint, `/appinfo` by default, to ASP.NET Core applications. It returns a JSON document describing the running application. The idea comes from the `/healthz` liveness probe convention: a standard, well-known address that operators and tools can query without knowing the application.
+Dut00.AppInfo adds an HTTP endpoint, `/appinfo` by default, to ASP.NET Core applications. It returns a JSON document describing the running application. The idea comes from the `/healthz` liveness probe convention: a standard, well-known address that operators and tools can query without knowing the application.
 
 Typical questions it answers:
 - Which application and version is running here?
@@ -19,10 +19,10 @@ Typical questions it answers:
 
 | Package | Depends on | Adds |
 | --- | --- | --- |
-| `AspNetCore.AppInfo` | `Microsoft.AspNetCore.App` (framework reference) | Endpoint, core fields, owner, custom properties, extensibility API |
-| `AspNetCore.AppInfo.Configuration` | `AspNetCore.AppInfo` | `ConfigurationsFiles` |
-| `AspNetCore.AppInfo.Environment` | `AspNetCore.AppInfo` | `ApplicationProcessUptime`, `HostName`, `ContentRootPath`, `AssemblyLocation` |
-| `AspNetCore.AppInfo.ConnectionStrings` | `AspNetCore.AppInfo` | `ConnectionStrings` (masked) |
+| `Dut00.AppInfo` | `Microsoft.AspNetCore.App` (framework reference) | Endpoint, core fields, owner, custom properties, extensibility API |
+| `Dut00.AppInfo.Configuration` | `Dut00.AppInfo` | `ConfigurationsFiles` |
+| `Dut00.AppInfo.Environment` | `Dut00.AppInfo` | `ApplicationProcessUptime`, `HostName`, `ContentRootPath`, `AssemblyLocation` |
+| `Dut00.AppInfo.ConnectionStrings` | `Dut00.AppInfo` | `ConnectionStrings` (masked) |
 
 - Supported target frameworks: `net8.0`, `net9.0`, `net10.0`.
 - All packages share one version number.
@@ -32,10 +32,10 @@ Typical questions it answers:
 ### 3.1 Registration
 
 ```csharp
-using AspNetCore.AppInfo;
-using AspNetCore.AppInfo.Configuration;
-using AspNetCore.AppInfo.ConnectionStrings;
-using AspNetCore.AppInfo.Environment;
+using Dut00.AppInfo;
+using Dut00.AppInfo.Configuration;
+using Dut00.AppInfo.ConnectionStrings;
+using Dut00.AppInfo.Environment;
 
 builder.Services.AddAppInfo(options =>
     {
@@ -129,7 +129,7 @@ Errors follow ASP.NET Core defaults:
 ### 4.3 Ordering and key rules
 
 - The JSON keeps keys in the order contributors run: core fields first, then the `With*` calls in the order they were made. Within one contributor, keys keep the order in which they were set.
-- If two contributors set the same key, the **later one wins** and a warning is logged under the `AspNetCore.AppInfo` category.
+- If two contributors set the same key, the **later one wins** and a warning is logged under the `Dut00.AppInfo` category.
 - Keys are case-sensitive. If two distinct keys end up with the same name after `KeyNamingPolicy` is applied (for example `Team` and `team` under CamelCase), the later one wins and the same warning is logged.
 - A value of `null` is still written as `"Key": null`.
 
@@ -202,7 +202,7 @@ Connection string names are user data and are emitted as-is, regardless of `KeyN
 ## 7. Security considerations
 
 - `/appinfo` exposes internal details: file paths, host names and infrastructure addresses. **It is open by default**, and the application owner must protect it, for example with `.RequireAuthorization()`, `.RequireHost()` or network policies.
-- The core package never emits secrets on its own. Only explicitly enabled packages add potentially sensitive data, and `AspNetCore.AppInfo.ConnectionStrings` always masks.
+- The core package never emits secrets on its own. Only explicitly enabled packages add potentially sensitive data, and `Dut00.AppInfo.ConnectionStrings` always masks.
 - Custom properties (`WithProperty`) are emitted as-is. Their content is the user's responsibility.
 - No caching is applied. Responses reflect the state at request time.
 
@@ -211,5 +211,5 @@ Connection string names are user data and are emitted as-is, regardless of `KeyN
 - Health status or liveness semantics. Use ASP.NET Core Health Checks for that.
 - An HTML UI. The endpoint is JSON only.
 - Writing or changing configuration.
-- `AspNetCore.AppInfo.Serilog`. A logging section from `Serilog:WriteTo`, with masking, is planned after v1.
+- `Dut00.AppInfo.Serilog`. A logging section from `Serilog:WriteTo`, with masking, is planned after v1.
 - (After v1: CI and a tag-triggered workflow that publishes releases to nuget.org were added; see the README.)

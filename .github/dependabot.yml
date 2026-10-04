@@ -8,7 +8,7 @@ updates:
     open-pull-requests-limit: 10
     ignore:
       # This repo's own packages come from the local ./artifacts feed, not nuget.org.
-      - dependency-name: "AspNetCore.AppInfo*"
+      - dependency-name: "Dut00.AppInfo*"
       # TestHost has one conditional version per target framework (8.x, 9.x, 10.x in Directory.Packages.props).
       # Dependabot ignores those conditions (dependabot-core#9299) and could put 10.x on net8.0, so bump it by hand.
       - dependency-name: "Microsoft.AspNetCore.TestHost"

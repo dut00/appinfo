@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Extends the Dut00.AppInfo /appinfo endpoint with process uptime, host name, content root path and entry assembly location.</Description>
+    <PackageTags>$(PackageTags);environment;uptime</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dut00.AppInfo\Dut00.AppInfo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dut00.AppInfo.Environment.Tests" />
+  </ItemGroup>
+
+</Project>

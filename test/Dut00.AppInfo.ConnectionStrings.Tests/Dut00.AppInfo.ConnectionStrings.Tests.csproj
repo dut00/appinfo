@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Dut00.AppInfo.ConnectionStrings\Dut00.AppInfo.ConnectionStrings.csproj" />
+  </ItemGroup>
+
+</Project>

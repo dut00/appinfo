@@ -1,7 +1,7 @@
-# <img src="assets/icon.png" alt="" width="48" height="48" align="absmiddle"> AspNetCore.AppInfo
+# <img src="assets/icon.png" alt="" width="48" height="48" align="absmiddle"> Dut00.AppInfo
 
 [![CI](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml)
-[![NuGet](https://img.shields.io/nuget/vpre/AspNetCore.AppInfo?label=NuGet)](https://www.nuget.org/packages/AspNetCore.AppInfo)
+[![NuGet](https://img.shields.io/nuget/vpre/Dut00.AppInfo?label=NuGet)](https://www.nuget.org/packages/Dut00.AppInfo)
 
 > **Friday, 4:47 PM.** Invoices on Stage are coming out with last month's prices. QA opens a ticket against `billing-api`.
 >
@@ -45,20 +45,20 @@ A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core appl
 
 | Package | Adds |
 | --- | --- |
-| `AspNetCore.AppInfo` | The endpoint, `ApplicationName`, `Version`, `Environment`, `IsProduction`, `Owner`, custom properties and the extensibility API |
-| `AspNetCore.AppInfo.Configuration` | `ConfigurationsFiles`: the configuration files the app loaded |
-| `AspNetCore.AppInfo.Environment` | `ApplicationProcessUptime`, `HostName`, `ContentRootPath`, `AssemblyLocation` |
-| `AspNetCore.AppInfo.ConnectionStrings` | `ConnectionStrings`, with passwords, keys and other secrets masked |
+| `Dut00.AppInfo` | The endpoint, `ApplicationName`, `Version`, `Environment`, `IsProduction`, `Owner`, custom properties and the extensibility API |
+| `Dut00.AppInfo.Configuration` | `ConfigurationsFiles`: the configuration files the app loaded |
+| `Dut00.AppInfo.Environment` | `ApplicationProcessUptime`, `HostName`, `ContentRootPath`, `AssemblyLocation` |
+| `Dut00.AppInfo.ConnectionStrings` | `ConnectionStrings`, with passwords, keys and other secrets masked |
 
 All packages target `net8.0`, `net9.0` and `net10.0` and share one version. They are not on nuget.org yet; see [Local packages](#local-packages).
 
 ## Quick start
 
 ```csharp
-using AspNetCore.AppInfo;
-using AspNetCore.AppInfo.Configuration;
-using AspNetCore.AppInfo.ConnectionStrings;
-using AspNetCore.AppInfo.Environment;
+using Dut00.AppInfo;
+using Dut00.AppInfo.Configuration;
+using Dut00.AppInfo.ConnectionStrings;
+using Dut00.AppInfo.Environment;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -112,7 +112,7 @@ app.MapAppInfo().RequireHost("*:8081");
 ```
 
 - The core package never emits secrets on its own. Values you pass to `WithProperty` are written as-is.
-- `AspNetCore.AppInfo.ConnectionStrings` always masks, and masking **fails closed**: a value it can't fully understand (URI-style, unparseable, Redis-style, split ODBC braces) is replaced completely with the mask (`***` by default). See the [package README](src/AspNetCore.AppInfo.ConnectionStrings/README.md) for the rules and known limitations. Masking reduces risk; it doesn't make the endpoint safe to expose publicly.
+- `Dut00.AppInfo.ConnectionStrings` always masks, and masking **fails closed**: a value it can't fully understand (URI-style, unparseable, Redis-style, split ODBC braces) is replaced completely with the mask (`***` by default). See the [package README](src/Dut00.AppInfo.ConnectionStrings/README.md) for the rules and known limitations. Masking reduces risk; it doesn't make the endpoint safe to expose publicly.
 
 ## Custom contributors
 
@@ -139,7 +139,7 @@ To ship a contributor as a package, add a `With*` extension method on `IAppInfoB
 ```
 src/        the four packages, each with its own README
 test/       xUnit v3 + Shouldly tests; integration tests run on TestServer
-samples/    AspNetCore.AppInfo.Sample.Api, a minimal API using all packages
+samples/    Dut00.AppInfo.Sample.Api, a minimal API using all packages
 build/      pack.ps1
 .github/    CI (Linux, Windows, macOS), release to nuget.org, Dependabot
 assets/     icon.png, the package icon
@@ -147,9 +147,9 @@ docs/       SPEC.md (behavioral contract), PLAN.md (implementation plan)
 ```
 
 ```bash
-dotnet build AspNetCore.AppInfo.slnx
-dotnet test --solution AspNetCore.AppInfo.slnx
-dotnet run --project samples/AspNetCore.AppInfo.Sample.Api   # then open http://localhost:5080/appinfo
+dotnet build Dut00.AppInfo.slnx
+dotnet test --solution Dut00.AppInfo.slnx
+dotnet run --project samples/Dut00.AppInfo.Sample.Api   # then open http://localhost:5080/appinfo
 ```
 
 The SDK version is pinned in `global.json`. Tests use Microsoft.Testing.Platform, which is why `dotnet test` takes `--solution`.
@@ -158,7 +158,7 @@ The SDK version is pinned in `global.json`. Tests use Microsoft.Testing.Platform
 
 ```bash
 pwsh ./build/pack.ps1        # Windows PowerShell 5.1: powershell -ExecutionPolicy Bypass -File build/pack.ps1
-dotnet run --project samples/AspNetCore.AppInfo.Sample.Api -p:UseLocalPackages=true
+dotnet run --project samples/Dut00.AppInfo.Sample.Api -p:UseLocalPackages=true
 ```
 
 `pack.ps1` writes the packages to `./artifacts`, which `nuget.config` registers as a local feed, and clears their cached copies so the next restore picks up the new build. With `-p:UseLocalPackages=true` the sample uses those packages instead of project references. To use them in another project, add `./artifacts` as a package source.
@@ -176,14 +176,14 @@ The workflow tests, packs with the tag's version, pushes the packages and symbol
 
 One-time setup:
 
-1. **nuget.org** > Trusted Publishing > add a policy: Repository Owner `dut00`, Repository `aspnetcore-appinfo`, Workflow File `release.yml` (file name only), Environment `nuget`. Its scope must allow **pushing new packages** (for example the pattern `AspNetCore.AppInfo*`), because the first release creates the package IDs.
+1. **nuget.org** > Trusted Publishing > add a policy: Repository Owner `dut00`, Repository `aspnetcore-appinfo`, Workflow File `release.yml` (file name only), Environment `nuget`. Its scope must allow **pushing new packages** (for example the pattern `Dut00.AppInfo*`), because the first release creates the package IDs.
 2. **GitHub** > Settings > Environments > `nuget`: add a required reviewer. Under "Deployment branches and tags", choose "No restriction" or add a tag rule `v*`; otherwise tag-triggered runs are blocked.
 3. **GitHub** > Settings > Secrets and variables > Actions > Variables: `NUGET_USER` = the nuget.org profile name (not the e-mail).
 4. Recommended: a tag ruleset (Settings > Rules) that restricts creating, updating and deleting `v*` tags.
 
 ## Roadmap
 
-- `AspNetCore.AppInfo.Serilog`: the configured Serilog sinks (`Serilog:WriteTo`), with secrets masked.
+- `Dut00.AppInfo.Serilog`: the configured Serilog sinks (`Serilog:WriteTo`), with secrets masked.
 
 ## License
 

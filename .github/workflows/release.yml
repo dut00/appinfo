@@ -52,7 +52,7 @@ jobs:
           fi
 
       - name: Test
-        run: dotnet test --solution AspNetCore.AppInfo.slnx --configuration Release
+        run: dotnet test --solution Dut00.AppInfo.slnx --configuration Release
 
       - name: Pack
         shell: pwsh
