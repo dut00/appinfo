@@ -28,11 +28,11 @@ jobs:
         os: [ubuntu-latest, windows-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
       # The SDK comes from global.json. Tests also run on net8.0, which needs the .NET 8 runtime;
       # net9.0 is only built, so it needs no runtime.
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
           dotnet-version: 8.0.x
@@ -52,9 +52,9 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-dotnet@v5
+      - uses: actions/setup-dotnet@v6
         with:
           global-json-file: global.json
 
@@ -65,7 +65,7 @@ jobs:
       - name: Build the sample against the packed packages
         run: dotnet build samples/AspNetCore.AppInfo.Sample.Api --configuration Release -p:UseLocalPackages=true
 
-      - uses: actions/upload-artifact@v6
+      - uses: actions/upload-artifact@v7
         with:
           name: packages
           path: artifacts/
