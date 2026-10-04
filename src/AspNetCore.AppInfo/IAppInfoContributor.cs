@@ -5,7 +5,7 @@ namespace AspNetCore.AppInfo;
 /// </summary>
 /// <remarks>
 /// Contributors are resolved from DI on every request and run in registration order.
-/// Register custom contributors with <c>WithContributor&lt;T&gt;()</c>.
+/// Register custom contributors with <see cref="AppInfoBuilderExtensions.WithContributor{T}"/>.
 /// </remarks>
 public interface IAppInfoContributor
 {

@@ -64,14 +64,15 @@ public static class AppInfoEndpointRouteBuilderExtensions
             await contributor.ContributeAsync(context, cancellationToken);
         }
 
-        var document = ToJson(context, options.JsonSerializerOptions);
+        var document = ToJson(context, options);
         await httpContext.Response.WriteAsJsonAsync(document, options.JsonSerializerOptions, cancellationToken);
     }
 
     // Built as a JsonObject so keys keep the order in which contributors set them.
-    private static JsonObject ToJson(AppInfoContext context, JsonSerializerOptions serializerOptions)
+    private static JsonObject ToJson(AppInfoContext context, AppInfoOptions options)
     {
-        var keyPolicy = serializerOptions.DictionaryKeyPolicy;
+        var keyPolicy = options.KeyNamingPolicy;
+        var serializerOptions = options.JsonSerializerOptions;
         var document = new JsonObject();
         foreach (var (key, value) in context.Entries)
         {

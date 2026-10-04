@@ -41,7 +41,7 @@ The SDK is pinned in `global.json` (10.0.x). The machine has the .NET 8 and .NET
 - `TreatWarningsAsErrors` and `GenerateDocumentationFile` are on for `src/`, so **every public member needs an XML doc comment**. A `cref` to a type or member that doesn't exist yet fails the build; use `<c>…</c>` until it does.
 - Public extension methods live in the package's own namespace (`AspNetCore.AppInfo`, `AspNetCore.AppInfo.Environment`, …), not in `Microsoft.Extensions.DependencyInjection`. A single `using` should light up a package's API.
 - Implementation details go in an `Internal` namespace and are `internal`. Test projects get access through `InternalsVisibleTo`.
-- A new field is added through an `IAppInfoContributor` registered with `TryAddEnumerable`. Contributors run in registration order, and the JSON keeps the order in which keys were first set.
+- A new field is added through an `IAppInfoContributor` registered with `TryAddEnumerable` (the one exception is `WithProperty`: all its contributors share a type, so each is added with `AddSingleton`). Contributors run in registration order, and the JSON keeps the order in which keys were first set.
 - Inside `AspNetCore.AppInfo.Environment`, write `System.Environment` in full, because the namespace shadows it.
 - Don't put `.WithName(...)` on the mapped endpoint. Endpoint names must be globally unique, so mapping `/appinfo` twice would break routing. Use `.WithDisplayName(...)` instead.
 - Masking must fail closed. If a connection string can't be parsed, mask the whole value.

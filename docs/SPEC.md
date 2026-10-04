@@ -52,10 +52,10 @@ builder.Services.AddAppInfo(options =>
 | Member | Package | Description |
 | --- | --- | --- |
 | `IServiceCollection.AddAppInfo(Action<AppInfoOptions>? configure = null)` | core | Registers services and core fields. Returns `IAppInfoBuilder`. Safe to call more than once: core services register once, and every `configure` delegate is applied. |
-| `IAppInfoBuilder.WithOwner(Action<OwnerOptions>)` | core | Adds `Owner`. |
-| `IAppInfoBuilder.WithProperty(string key, object? value)` | core | Adds a custom key with a constant value. |
-| `IAppInfoBuilder.WithProperty(string key, Func<IServiceProvider, object?> factory)` | core | Adds a custom key whose value is computed on every request. |
-| `IAppInfoBuilder.WithContributor<T>()` | core | Registers a custom `IAppInfoContributor`. |
+| `IAppInfoBuilder.WithOwner(Action<OwnerOptions>)` | core | Adds `Owner`. Safe to call more than once: the field is added once and every delegate is applied. |
+| `IAppInfoBuilder.WithProperty(string key, object? value)` | core | Adds a custom key with a constant value. A plain `null` binds to the factory overload and throws; write `(object?)null` for a constant null. A delegate value (e.g. `() => x`) throws `ArgumentException`. |
+| `IAppInfoBuilder.WithProperty(string key, Func<IServiceProvider, object?> factory)` | core | Adds a custom key whose value is computed on every request from the request's service provider. |
+| `IAppInfoBuilder.WithContributor<T>()` | core | Registers a custom `IAppInfoContributor` as scoped. Registering the same type twice has no effect. |
 | `IAppInfoBuilder.WithConfigurationDetails(Action<ConfigurationDetailsOptions>? configure = null)` | Configuration | Adds `ConfigurationsFiles`. |
 | `IAppInfoBuilder.WithEnvironmentDetails()` | Environment | Adds the environment fields. |
 | `IAppInfoBuilder.WithConnectionStrings(Action<ConnectionStringsOptions>? configure = null)` | ConnectionStrings | Adds masked `ConnectionStrings`. |
@@ -91,7 +91,8 @@ public sealed class AppInfoContext
 ```
 
 - Third parties extend AppInfo by implementing `IAppInfoContributor` and exposing a `With*` extension method on `IAppInfoBuilder` that calls `WithContributor<T>()`.
-- Contributors are resolved from DI per request, so they may depend on scoped services.
+- Contributors are resolved from the request's service provider. `WithContributor<T>()` registers them as scoped, so they may depend on scoped services.
+- Every `WithProperty` call adds its own key, even when the key repeats; the duplicate-key rule in §4.3 then applies.
 
 ## 4. Response contract
 
@@ -116,7 +117,7 @@ Errors follow ASP.NET Core defaults:
 | `Version` | string \| null | core | Entry assembly `AssemblyName.Version` | e.g. `"1.0.5.0"` |
 | `Environment` | string | core | `IHostEnvironment.EnvironmentName` | |
 | `IsProduction` | bool | core | `IHostEnvironment.IsProduction()` | |
-| `Owner` | string | core (`WithOwner`) | `OwnerOptions.Owner` | Left out unless `WithOwner` is called |
+| `Owner` | string \| null | core (`WithOwner`) | `OwnerOptions.Owner` | Left out unless `WithOwner` is called |
 | *custom* | any JSON-serializable value | core (`WithProperty`) | user value or factory | |
 | `ConfigurationsFiles` | string[] | Configuration | File-based configuration providers | Absolute physical paths, in load order |
 | `ApplicationProcessUptime` | string (TimeSpan, `d.hh:mm:ss.fffffff`) | Environment | now − process start time | Computed per request |
@@ -136,7 +137,8 @@ Errors follow ASP.NET Core defaults:
 
 - By default, keys are emitted exactly as defined (PascalCase), matching the draft.
 - `AppInfoOptions.KeyNamingPolicy` applies a `JsonNamingPolicy` (for example `CamelCase` or `SnakeCaseLower`) to root keys and to nested object properties.
-- For full control, `AppInfoOptions.JsonSerializerOptions` can be modified directly. Default: indented output.
+- Keys of nested dictionaries are user data (for example connection string names) and are emitted as-is. `JsonSerializerOptions.DictionaryKeyPolicy` can still be set to convert them.
+- For full control, `AppInfoOptions.JsonSerializerOptions` can be modified directly; it applies to values, not to root keys. Default: indented output.
 
 ### 4.5 Example response (all v1 packages)
 
