@@ -1,5 +1,5 @@
 using System.Net;
-using AspNetCore.AppInfo.Tests.Infrastructure;
+using AspNetCore.AppInfo.Testing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;

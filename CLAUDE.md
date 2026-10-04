@@ -33,6 +33,7 @@ Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the ne
 
 - `src/AspNetCore.AppInfo*/`: packable libraries. One package per folder; each has its own `README.md`, which goes into the package.
 - `test/AspNetCore.AppInfo*.Tests/`: xUnit v3 + Shouldly. Integration tests use `WebApplication.CreateBuilder()` with `UseTestServer()`.
+- `test/Infrastructure/`: shared test helpers (`TestApp`, log capture, JSON helpers; namespace `AspNetCore.AppInfo.Testing`), linked into every test project by `test/Directory.Build.props`. Don't copy them into a test project.
 - `samples/AspNetCore.AppInfo.Sample.Api/`: minimal API that uses the packages through ProjectReference. `-p:UseLocalPackages=true` switches it to `./artifacts`.
 - `Directory.Build.props`: shared TFMs, strict compiler settings and NuGet metadata. Projects under `src/` become packable automatically.
 - `.claude/agents/code-reviewer.md`: read-only review subagent that checks changes against the spec and these conventions.

@@ -1,6 +1,6 @@
 using System.Text.Json;
 
-namespace AspNetCore.AppInfo.Tests.Infrastructure;
+namespace AspNetCore.AppInfo.Testing;
 
 internal static class JsonElementExtensions
 {

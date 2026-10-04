@@ -3,9 +3,11 @@
     <Project Path="samples/AspNetCore.AppInfo.Sample.Api/AspNetCore.AppInfo.Sample.Api.csproj" />
   </Folder>
   <Folder Name="/src/">
+    <Project Path="src/AspNetCore.AppInfo.Environment/AspNetCore.AppInfo.Environment.csproj" />
     <Project Path="src/AspNetCore.AppInfo/AspNetCore.AppInfo.csproj" />
   </Folder>
   <Folder Name="/test/">
+    <Project Path="test/AspNetCore.AppInfo.Environment.Tests/AspNetCore.AppInfo.Environment.Tests.csproj" />
     <Project Path="test/AspNetCore.AppInfo.Tests/AspNetCore.AppInfo.Tests.csproj" />
   </Folder>
 </Solution>

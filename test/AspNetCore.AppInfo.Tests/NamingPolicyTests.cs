@@ -1,5 +1,5 @@
 using System.Text.Json;
-using AspNetCore.AppInfo.Tests.Infrastructure;
+using AspNetCore.AppInfo.Testing;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace AspNetCore.AppInfo.Tests;

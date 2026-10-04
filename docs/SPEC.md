@@ -120,10 +120,10 @@ Errors follow ASP.NET Core defaults:
 | `Owner` | string \| null | core (`WithOwner`) | `OwnerOptions.Owner` | Left out unless `WithOwner` is called |
 | *custom* | any JSON-serializable value | core (`WithProperty`) | user value or factory | |
 | `ConfigurationsFiles` | string[] | Configuration | File-based configuration providers | Absolute physical paths, in load order |
-| `ApplicationProcessUptime` | string (TimeSpan, `d.hh:mm:ss.fffffff`) | Environment | now − process start time | Computed per request |
+| `ApplicationProcessUptime` | string (TimeSpan constant format `[d.]hh:mm:ss[.fffffff]`) | Environment | now − process start time | Computed per request with the registered `TimeProvider` (`TimeProvider.System` by default). Days and fractions are left out when zero; a clock behind the start time reports `00:00:00` |
 | `HostName` | string | Environment | `System.Environment.MachineName` | |
 | `ContentRootPath` | string | Environment | `IHostEnvironment.ContentRootPath` | |
-| `AssemblyLocation` | string \| null | Environment | Entry assembly `Location` | |
+| `AssemblyLocation` | string \| null | Environment | Entry assembly `Location` | `null` when there is none, for example in a single-file app |
 | `ConnectionStrings` | object (name → masked string) | ConnectionStrings | `ConnectionStrings` configuration section | See §5 |
 
 ### 4.3 Ordering and key rules

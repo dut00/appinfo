@@ -86,10 +86,10 @@ Each extension is a separate csproj with a ProjectReference to core (packed as a
   - Source: `IConfiguration as IConfigurationRoot`, then `Providers.OfType<FileConfigurationProvider>()`, then `Source.FileProvider?.GetFileInfo(Source.Path).PhysicalPath ?? Source.Path`.
   - Only files that exist are listed by default. The `IncludeMissingOptionalFiles` option includes missing optional files too.
 - **AspNetCore.AppInfo.Environment**: `WithEnvironmentDetails()` adds four keys:
-  - `ApplicationProcessUptime`: process start time to now, as a TimeSpan. Computed on each request through an injected `TimeProvider` so tests can control it.
+  - `ApplicationProcessUptime`: process start time to now, as a TimeSpan. Computed on each request with the app's `TimeProvider` if registered (the package registers none), otherwise `TimeProvider.System`, so tests can control it.
   - `HostName`: `System.Environment.MachineName`
   - `ContentRootPath`: from `IHostEnvironment`
-  - `AssemblyLocation`: `Assembly.GetEntryAssembly()?.Location`
+  - `AssemblyLocation`: `Assembly.GetEntryAssembly()?.Location`, or `null` when empty (single-file apps)
 - **AspNetCore.AppInfo.ConnectionStrings**: `WithConnectionStrings(Action<ConnectionStringsOptions>? configure = null)` adds `ConnectionStrings: { "<name>": "<masked value>" }`, read from `IConfiguration.GetSection("ConnectionStrings")`.
   - Masking parses each value with `DbConnectionStringBuilder`. Keys listed in `SensitiveKeys` get the value `***`.
   - Default `SensitiveKeys` (case-insensitive): Password, Pwd, User ID, UID, User, Username, AccountKey, SharedAccessKey, SharedAccessSignature, AccessKey, Secret, Token, ApiKey.
@@ -103,7 +103,7 @@ Each extension is a separate csproj with a ProjectReference to core (packed as a
 - The sample uses ProjectReference by default. Building with `-p:UseLocalPackages=true` switches to PackageReference against `./artifacts` (conditional ItemGroup in the csproj).
 
 ## Tests (xUnit + Shouldly)
-- Shared helper per test project: `WebApplication.CreateBuilder()` + `builder.WebHost.UseTestServer()`, in-memory configuration, then `GetAppInfoAsync()` (a parsed `JsonElement`) or `GetAppInfoStringAsync()` (the raw body).
+- Shared helpers in `test/Infrastructure/`, compiled into every test project by `test/Directory.Build.props`: `TestApp` uses `WebApplication.CreateBuilder()` + `builder.WebHost.UseTestServer()`, in-memory configuration, then `GetAppInfoAsync()` (a parsed `JsonElement`) or `GetAppInfoStringAsync()` (the raw body).
 - **Core** covers:
   - default path and custom path;
   - core fields, `WithOwner`, and `WithProperty` (value and factory);

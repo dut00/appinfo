@@ -17,6 +17,11 @@
     <PackageReference Include="Microsoft.AspNetCore.TestHost" />
   </ItemGroup>
 
+  <!-- Shared helpers (TestApp on TestServer, log capture, ...) are compiled into every test project. -->
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)Infrastructure\**\*.cs" LinkBase="Infrastructure" />
+  </ItemGroup>
+
   <ItemGroup>
     <Using Include="Shouldly" />
     <Using Include="Xunit" />

@@ -1,7 +1,7 @@
 using System.Collections.Concurrent;
 using Microsoft.Extensions.Logging;
 
-namespace AspNetCore.AppInfo.Tests.Infrastructure;
+namespace AspNetCore.AppInfo.Testing;
 
 /// <summary>
 /// Collects log entries in memory so tests can assert on them.

@@ -1,7 +1,7 @@
 using System.Net;
 using System.Reflection;
 using System.Text.Json;
-using AspNetCore.AppInfo.Tests.Infrastructure;
+using AspNetCore.AppInfo.Testing;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
