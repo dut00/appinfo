@@ -61,10 +61,11 @@ internal sealed class ConfigurationAppInfoContributor(IConfiguration configurati
         }
 
         // A missing file has no physical path, but a physical provider still tells where it would be.
-        // Like PhysicalFileProvider.GetFileInfo, ignore leading separators so the path stays under the root.
+        // Like PhysicalFileProvider.GetFileInfo, ignore this platform's leading separators so the path stays under
+        // the root ("\" is a separator on Windows only).
         if (fileProvider is PhysicalFileProvider physical)
         {
-            return Path.GetFullPath(Path.Combine(physical.Root, path.TrimStart('/', '\\')));
+            return Path.GetFullPath(Path.Combine(physical.Root, path.TrimStart(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)));
         }
 
         return path;

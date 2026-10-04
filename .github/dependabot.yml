@@ -1,0 +1,38 @@
+version: 2
+
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    ignore:
+      # This repo's own packages come from the local ./artifacts feed, not nuget.org.
+      - dependency-name: "AspNetCore.AppInfo*"
+      # TestHost has one conditional version per target framework (8.x, 9.x, 10.x in Directory.Packages.props).
+      # Dependabot ignores those conditions (dependabot-core#9299) and could put 10.x on net8.0, so bump it by hand.
+      - dependency-name: "Microsoft.AspNetCore.TestHost"
+    groups:
+      xunit:
+        patterns: ["xunit*"]
+      test-dependencies:
+        patterns:
+          - "Shouldly"
+          - "Microsoft.Extensions.TimeProvider.Testing"
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    groups:
+      github-actions:
+        patterns: ["*"]
+
+  - package-ecosystem: dotnet-sdk
+    directory: /
+    schedule:
+      interval: weekly
+    ignore:
+      # Stay on the .NET 10 SDK; moving to a new major SDK is a deliberate change.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]

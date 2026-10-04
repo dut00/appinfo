@@ -1,0 +1,72 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  # Superseded pull request runs are cancelled; every push to master keeps its own result.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  build:
+    name: Build and test (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      # The SDK comes from global.json. Tests also run on net8.0, which needs the .NET 8 runtime;
+      # net9.0 is only built, so it needs no runtime.
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+          dotnet-version: 8.0.x
+
+      - name: Restore
+        run: dotnet restore AspNetCore.AppInfo.slnx
+
+      - name: Build
+        run: dotnet build AspNetCore.AppInfo.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test --solution AspNetCore.AppInfo.slnx --configuration Release --no-build
+
+  pack:
+    name: Pack
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+
+      - name: Pack
+        shell: pwsh
+        run: ./build/pack.ps1
+
+      - name: Build the sample against the packed packages
+        run: dotnet build samples/AspNetCore.AppInfo.Sample.Api --configuration Release -p:UseLocalPackages=true
+
+      - uses: actions/upload-artifact@v6
+        with:
+          name: packages
+          path: artifacts/
+          if-no-files-found: error

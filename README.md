@@ -1,5 +1,7 @@
 # AspNetCore.AppInfo
 
+[![CI](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml/badge.svg)](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml)
+
 A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core applications. Like `/healthz` for liveness, it gives operators and tools one well-known address that answers: *which application and version runs here, in which environment, who owns it, and how is it configured?*
 
 ```json
@@ -124,6 +126,7 @@ src/        the four packages, each with its own README
 test/       xUnit v3 + Shouldly tests; integration tests run on TestServer
 samples/    AspNetCore.AppInfo.Sample.Api, a minimal API using all packages
 build/      pack.ps1
+.github/    CI workflow (Linux, Windows, macOS) and Dependabot
 docs/       SPEC.md (behavioral contract), PLAN.md (implementation plan)
 ```
 
@@ -147,7 +150,6 @@ dotnet run --project samples/AspNetCore.AppInfo.Sample.Api -p:UseLocalPackages=t
 ## Roadmap
 
 - `AspNetCore.AppInfo.Serilog`: the configured Serilog sinks (`Serilog:WriteTo`), with secrets masked.
-- Continuous integration (GitHub Actions).
 - Publishing to nuget.org.
 
 ## License

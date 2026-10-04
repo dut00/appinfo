@@ -37,6 +37,7 @@ Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the ne
 - `test/AspNetCore.AppInfo*.Tests/`: xUnit v3 + Shouldly. Integration tests use `WebApplication.CreateBuilder()` with `UseTestServer()`.
 - `test/Infrastructure/`: shared test helpers (`TestApp`, log capture, JSON helpers; namespace `AspNetCore.AppInfo.Testing`), linked into every test project by `test/Directory.Build.props`. Don't copy them into a test project.
 - `samples/AspNetCore.AppInfo.Sample.Api/`: minimal API that uses the packages through ProjectReference. `-p:UseLocalPackages=true` switches it to `./artifacts`.
+- `.github/`: `workflows/ci.yml` builds and tests on Linux, Windows and macOS, then packs; `dependabot.yml` updates NuGet packages (not `Microsoft.AspNetCore.TestHost`: bump its per-TFM versions by hand), GitHub Actions and the SDK in `global.json` (within .NET 10). Tests must pass on Linux too: don't assume `\` is a path separator.
 - `Directory.Build.props`: shared TFMs, strict compiler settings and NuGet metadata. Projects under `src/` become packable automatically.
 - `.claude/agents/code-reviewer.md`: read-only review subagent that checks changes against the spec and these conventions.
 - `Directory.Packages.props`: Central Package Management. Add versions there, never in a csproj. The repo's own packages use `$(AppInfoPackageVersion)`; bump the version there (in `Directory.Build.props`), not in `<Version>`. `Microsoft.AspNetCore.TestHost` has one version per TFM.

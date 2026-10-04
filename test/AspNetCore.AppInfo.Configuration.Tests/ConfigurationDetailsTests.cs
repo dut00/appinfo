@@ -124,8 +124,12 @@ public sealed class ConfigurationDetailsTests : IDisposable
             .AddJsonFile(new PhysicalFileProvider(_directory.Path), configuredPath, optional: true, reloadOnChange: false)
             .Build();
 
-        ConfigurationAppInfoContributor.GetConfigurationFiles(configuration, includeMissingOptionalFiles: true)
-            .ShouldBe([_directory.Combine("missing.json")]);
+        var file = ConfigurationAppInfoContributor.GetConfigurationFiles(configuration, includeMissingOptionalFiles: true)
+            .ShouldHaveSingleItem();
+
+        // On Windows both separators are stripped; on Linux and macOS "\missing.json" is a legal file name in the root.
+        var expected = OperatingSystem.IsWindows() || configuredPath.StartsWith('/') ? "missing.json" : "\\missing.json";
+        file.ShouldBe(_directory.Combine(expected));
     }
 
     [Fact]

@@ -38,6 +38,7 @@ appinfo-nuget/
 ├─ docs/PLAN.md                 # copy of this plan
 ├─ docs/SPEC.md                 # behavioral contract (wins over this plan)
 ├─ docs/draft.md                # original notes (moved from root)
+├─ .github/                     # workflows/ci.yml (build + test on Linux, Windows, macOS; pack), dependabot.yml
 ├─ build/pack.ps1               # dotnet pack -c Release -o ./artifacts (+ clears aspnetcore.appinfo* from NuGet cache)
 ├─ src/
 │  ├─ AspNetCore.AppInfo/
@@ -146,4 +147,4 @@ After **every** step: run `dotnet build` and `dotnet test` (once tests exist), r
 5. `dotnet run --project samples/AspNetCore.AppInfo.Sample.Api -p:UseLocalPackages=true`: the sample runs against the local-feed packages.
 
 ## Out of scope for v1 (listed in the README roadmap)
-AspNetCore.AppInfo.Serilog (`Serilog:WriteTo` section with masking), CI (GitHub Actions), publishing to nuget.org.
+AspNetCore.AppInfo.Serilog (`Serilog:WriteTo` section with masking), publishing to nuget.org. (CI with GitHub Actions and Dependabot were added after v1.)
