@@ -212,4 +212,4 @@ Connection string names are user data and are emitted as-is, regardless of `KeyN
 - An HTML UI. The endpoint is JSON only.
 - Writing or changing configuration.
 - `AspNetCore.AppInfo.Serilog`. A logging section from `Serilog:WriteTo`, with masking, is planned after v1.
-- Publishing to nuget.org. (CI with GitHub Actions was added after v1.)
+- (After v1: CI and a tag-triggered workflow that publishes releases to nuget.org were added; see the README.)

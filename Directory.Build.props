@@ -40,4 +40,13 @@
     <None Include="$(MSBuildProjectDirectory)/README.md" Pack="true" PackagePath="/" />
   </ItemGroup>
 
+  <!-- Package icon shared by all packages: assets/icon.png (PNG, 128x128 recommended, max 1 MB). -->
+  <PropertyGroup Condition="'$(IsPackable)' == 'true' And Exists('$(MSBuildThisFileDirectory)assets/icon.png')">
+    <PackageIcon>icon.png</PackageIcon>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(PackageIcon)' == 'icon.png'">
+    <None Include="$(MSBuildThisFileDirectory)assets/icon.png" Pack="true" PackagePath="/" Visible="false" />
+  </ItemGroup>
+
 </Project>

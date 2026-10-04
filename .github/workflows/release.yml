@@ -1,0 +1,83 @@
+name: Release
+
+# Publishes the packages to nuget.org when a version tag is pushed:
+#   git tag v0.1.0-preview.1 && git push origin v0.1.0-preview.1
+# A tag with a suffix (-preview.1, -rc.1, ...) becomes a NuGet prerelease and a GitHub prerelease.
+on:
+  push:
+    tags: ['v*']
+
+permissions:
+  contents: write # create the GitHub release
+  id-token: write # nuget.org Trusted Publishing (OIDC), no API key secret needed
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  release:
+    name: Publish to nuget.org
+    runs-on: ubuntu-latest
+    # Protect this environment with a required reviewer (Settings > Environments) to approve every release.
+    environment: nuget
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-dotnet@v5
+        with:
+          global-json-file: global.json
+          dotnet-version: 8.0.x
+
+      - name: Read the version from the tag
+        id: version
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          # SemVer without build metadata: no leading zeros, no empty prerelease identifiers.
+          if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
+            echo "::error::Tag '$GITHUB_REF_NAME' is not v<major>.<minor>.<patch>[-suffix]."
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          if [[ "$version" == *-* ]]; then
+            echo "prerelease=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "prerelease=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Test
+        run: dotnet test --solution AspNetCore.AppInfo.slnx --configuration Release
+
+      - name: Pack
+        shell: pwsh
+        run: ./build/pack.ps1 -Version '${{ steps.version.outputs.version }}'
+
+      - name: Log in to nuget.org
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          # The nuget.org account name (not the e-mail), stored as a repository variable.
+          user: ${{ vars.NUGET_USER }}
+
+      # Symbol packages (.snupkg) next to the .nupkg files are pushed automatically.
+      - name: Push to nuget.org
+        run: >
+          dotnet nuget push "artifacts/*.nupkg"
+          --api-key "${{ steps.nuget-login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
+
+      - name: Create the GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PRERELEASE: ${{ steps.version.outputs.prerelease }}
+        run: |
+          flags=(--title "$GITHUB_REF_NAME" --generate-notes --verify-tag)
+          if [[ "$PRERELEASE" == "true" ]]; then flags+=(--prerelease); fi
+          gh release create "$GITHUB_REF_NAME" artifacts/*.nupkg artifacts/*.snupkg "${flags[@]}"

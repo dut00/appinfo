@@ -1,6 +1,7 @@
-# AspNetCore.AppInfo
+# <img src="assets/icon.png" alt="" width="48" height="48" align="absmiddle"> AspNetCore.AppInfo
 
 [![CI](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml)
+[![NuGet](https://img.shields.io/nuget/vpre/AspNetCore.AppInfo?label=NuGet)](https://www.nuget.org/packages/AspNetCore.AppInfo)
 
 > **Friday, 4:47 PM.** Invoices on Stage are coming out with last month's prices. QA opens a ticket against `billing-api`.
 >
@@ -140,7 +141,8 @@ src/        the four packages, each with its own README
 test/       xUnit v3 + Shouldly tests; integration tests run on TestServer
 samples/    AspNetCore.AppInfo.Sample.Api, a minimal API using all packages
 build/      pack.ps1
-.github/    CI workflow (Linux, Windows, macOS) and Dependabot
+.github/    CI (Linux, Windows, macOS), release to nuget.org, Dependabot
+assets/     icon.png, the package icon
 docs/       SPEC.md (behavioral contract), PLAN.md (implementation plan)
 ```
 
@@ -161,10 +163,27 @@ dotnet run --project samples/AspNetCore.AppInfo.Sample.Api -p:UseLocalPackages=t
 
 `pack.ps1` writes the packages to `./artifacts`, which `nuget.config` registers as a local feed, and clears their cached copies so the next restore picks up the new build. With `-p:UseLocalPackages=true` the sample uses those packages instead of project references. To use them in another project, add `./artifacts` as a package source.
 
+### Releasing
+
+Releases are published to nuget.org by `.github/workflows/release.yml` when a version tag is pushed. It uses nuget.org Trusted Publishing, so no API key is stored in the repo.
+
+```bash
+git tag v0.1.0-preview.1
+git push origin v0.1.0-preview.1
+```
+
+The workflow tests, packs with the tag's version, pushes the packages and symbols to nuget.org and creates a GitHub release. A tag with a suffix (`-preview.1`, `-rc.1`) becomes a prerelease. **The tag decides the published version**; `AppInfoPackageVersion` in `Directory.Build.props` is only the default for local packs.
+
+One-time setup:
+
+1. **nuget.org** > Trusted Publishing > add a policy: Repository Owner `dut00`, Repository `aspnetcore-appinfo`, Workflow File `release.yml` (file name only), Environment `nuget`. Its scope must allow **pushing new packages** (for example the pattern `AspNetCore.AppInfo*`), because the first release creates the package IDs.
+2. **GitHub** > Settings > Environments > `nuget`: add a required reviewer. Under "Deployment branches and tags", choose "No restriction" or add a tag rule `v*`; otherwise tag-triggered runs are blocked.
+3. **GitHub** > Settings > Secrets and variables > Actions > Variables: `NUGET_USER` = the nuget.org profile name (not the e-mail).
+4. Recommended: a tag ruleset (Settings > Rules) that restricts creating, updating and deleting `v*` tags.
+
 ## Roadmap
 
 - `AspNetCore.AppInfo.Serilog`: the configured Serilog sinks (`Serilog:WriteTo`), with secrets masked.
-- Publishing to nuget.org.
 
 ## License
 
