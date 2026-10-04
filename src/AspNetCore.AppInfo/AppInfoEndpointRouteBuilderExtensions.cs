@@ -64,12 +64,12 @@ public static class AppInfoEndpointRouteBuilderExtensions
             await contributor.ContributeAsync(context, cancellationToken);
         }
 
-        var document = ToJson(context, options);
+        var document = ToJson(context, options, logger);
         await httpContext.Response.WriteAsJsonAsync(document, options.JsonSerializerOptions, cancellationToken);
     }
 
     // Built as a JsonObject so keys keep the order in which contributors set them.
-    private static JsonObject ToJson(AppInfoContext context, AppInfoOptions options)
+    private static JsonObject ToJson(AppInfoContext context, AppInfoOptions options, ILogger logger)
     {
         var keyPolicy = options.KeyNamingPolicy;
         var serializerOptions = options.JsonSerializerOptions;
@@ -77,6 +77,13 @@ public static class AppInfoEndpointRouteBuilderExtensions
         foreach (var (key, value) in context.Entries)
         {
             var name = keyPolicy?.ConvertName(key) ?? key;
+            if (document.ContainsKey(name))
+            {
+                // Distinct keys such as "Team" and "team" can collide once the naming policy is applied.
+                logger.LogWarning(
+                    "AppInfo key '{Key}' is written as '{Name}', which another key already uses. The last value wins.", key, name);
+            }
+
             document[name] = value is null ? null : JsonSerializer.SerializeToNode(value, value.GetType(), serializerOptions);
         }
 

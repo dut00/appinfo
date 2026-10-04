@@ -28,9 +28,9 @@ appinfo-nuget/
 ├─ Directory.Build.props        # TFMs, LangVersion, Nullable, ImplicitUsings, TreatWarningsAsErrors,
 │                               # NuGet metadata (Authors, MIT license, RepositoryUrl, Version=0.1.0,
 │                               # PackageReadmeFile, GenerateDocumentationFile, Deterministic, snupkg symbols)
-├─ Directory.Packages.props     # CPM: xunit, xunit.runner.visualstudio, Microsoft.NET.Test.Sdk,
+├─ Directory.Packages.props     # CPM: xunit.v3 (Microsoft.Testing.Platform, no VSTest packages),
 │                               # Shouldly, Microsoft.AspNetCore.TestHost (versions per TFM)
-├─ global.json                  # SDK 10.0.x, rollForward latestFeature
+├─ global.json                  # SDK 10.0.x, rollForward latestFeature, test runner = Microsoft.Testing.Platform
 ├─ nuget.config                 # nuget.org + local ./artifacts source
 ├─ .gitignore, .editorconfig, README.md, LICENSE
 ├─ docs/PLAN.md                 # copy of this plan
@@ -103,7 +103,7 @@ Each extension is a separate csproj with a ProjectReference to core (packed as a
 - The sample uses ProjectReference by default. Building with `-p:UseLocalPackages=true` switches to PackageReference against `./artifacts` (conditional ItemGroup in the csproj).
 
 ## Tests (xUnit + Shouldly)
-- Shared helper per test project: `WebApplication.CreateBuilder()` + `builder.WebHost.UseTestServer()`, in-memory configuration, then `GetFromJsonAsync<JsonElement>("/appinfo")`.
+- Shared helper per test project: `WebApplication.CreateBuilder()` + `builder.WebHost.UseTestServer()`, in-memory configuration, then `GetAppInfoAsync()` (a parsed `JsonElement`) or `GetAppInfoStringAsync()` (the raw body).
 - **Core** covers:
   - default path and custom path;
   - core fields, `WithOwner`, and `WithProperty` (value and factory);

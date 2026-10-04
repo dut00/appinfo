@@ -19,7 +19,7 @@ Run, from the repo root:
 
 ```bash
 dotnet build AspNetCore.AppInfo.slnx -nologo -v q
-dotnet test AspNetCore.AppInfo.slnx -nologo -v q   # only once test projects exist
+dotnet test --solution AspNetCore.AppInfo.slnx     # only once test projects exist
 ```
 
 A build warning is a build error here (`TreatWarningsAsErrors`). Report any failure verbatim as the top finding. Note: the machine has no .NET 9 runtime, so tests target only `net8.0;net10.0`; that is expected, not a finding.

@@ -20,12 +20,14 @@ Guidance for Claude Code when working in this repository.
 
 ```bash
 dotnet build AspNetCore.AppInfo.slnx           # builds net8.0, net9.0 and net10.0
-dotnet test AspNetCore.AppInfo.slnx            # tests run on net8.0 and net10.0
+dotnet test --solution AspNetCore.AppInfo.slnx # tests run on net8.0 and net10.0
 dotnet run --project samples/AspNetCore.AppInfo.Sample.Api   # then GET /appinfo
 ./build/pack.ps1                               # packs into ./artifacts (local NuGet feed)
 ```
 
 The SDK is pinned in `global.json` (10.0.x). The machine has the .NET 8 and .NET 10 runtimes but **not .NET 9**. net9.0 builds fine, but its tests can't run locally, so test projects target only `net8.0;net10.0`.
+
+Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the new `dotnet test` mode, so pass the solution with `--solution` (VSTest options such as `--logger` don't apply). Don't add `Microsoft.NET.Test.Sdk` or `xunit.runner.visualstudio`.
 
 ## Layout
 

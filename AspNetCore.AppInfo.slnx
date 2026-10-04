@@ -2,4 +2,7 @@
   <Folder Name="/src/">
     <Project Path="src/AspNetCore.AppInfo/AspNetCore.AppInfo.csproj" />
   </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/AspNetCore.AppInfo.Tests/AspNetCore.AppInfo.Tests.csproj" />
+  </Folder>
 </Solution>

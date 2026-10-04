@@ -25,8 +25,9 @@
     <IsPackable>false</IsPackable>
   </PropertyGroup>
 
-  <!-- Library projects under src/ are packable, ship XML docs and a per-package README. -->
-  <PropertyGroup Condition="$(MSBuildProjectDirectory.Contains('$([System.IO.Path]::DirectorySeparatorChar)src$([System.IO.Path]::DirectorySeparatorChar)'))">
+  <!-- Library projects under <repo>/src/ are packable, ship XML docs and a per-package README.
+       Anchored to the repo root so a clone inside a folder named "src" doesn't affect tests or samples. -->
+  <PropertyGroup Condition="$(MSBuildProjectDirectory.StartsWith('$(MSBuildThisFileDirectory)src$([System.IO.Path]::DirectorySeparatorChar)'))">
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>

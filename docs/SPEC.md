@@ -130,7 +130,7 @@ Errors follow ASP.NET Core defaults:
 
 - The JSON keeps keys in the order contributors run: core fields first, then the `With*` calls in the order they were made. Within one contributor, keys keep the order in which they were set.
 - If two contributors set the same key, the **later one wins** and a warning is logged under the `AspNetCore.AppInfo` category.
-- Keys are case-sensitive.
+- Keys are case-sensitive. If two distinct keys end up with the same name after `KeyNamingPolicy` is applied (for example `Team` and `team` under CamelCase), the later one wins and the same warning is logged.
 - A value of `null` is still written as `"Key": null`.
 
 ### 4.4 Naming policy
