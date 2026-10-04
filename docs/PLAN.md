@@ -133,7 +133,7 @@ After **every** step: run `dotnet build` and `dotnet test` (once tests exist), s
 ## Verification
 1. `dotnet build -c Release` builds green for net8.0, net9.0 and net10.0. SDK 10 can build net9.0 without the net9 runtime.
 2. `dotnet test` passes on net8.0 and net10.0.
-3. `dotnet run --project samples/AspNetCore.AppInfo.Sample.Api`, then `curl http://localhost:<port>/appinfo`: the JSON matches the draft and the password is masked.
+3. `dotnet run --project samples/AspNetCore.AppInfo.Sample.Api`, then `curl http://localhost:5080/appinfo`: the JSON matches the draft and the password is masked.
 4. `./build/pack.ps1` produces 4 `.nupkg` and 4 `.snupkg` files in `./artifacts`. Inspect them for lib/net8.0, net9.0 and net10.0, the README, and the dependency on AspNetCore.AppInfo.
 5. `dotnet run --project samples/AspNetCore.AppInfo.Sample.Api -p:UseLocalPackages=true`: the sample runs against the local-feed packages.
 

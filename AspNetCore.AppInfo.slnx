@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/AspNetCore.AppInfo.Sample.Api/AspNetCore.AppInfo.Sample.Api.csproj" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/AspNetCore.AppInfo/AspNetCore.AppInfo.csproj" />
   </Folder>
