@@ -10,6 +10,7 @@ builder.Services.AddAppInfo()
     .WithEnvironmentDetails()
     .WithConnectionStrings()
     .WithOwner(o => o.Owner = "red_team@company.com")
+    .WithProperty("AssetId", "AST-008821")
     .WithProperty("Team", "red");
 
 var app = builder.Build();
