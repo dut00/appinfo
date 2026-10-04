@@ -10,9 +10,12 @@
     <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
   </PropertyGroup>
 
-  <!-- Shared NuGet metadata. Every package in src/ gets the same version. -->
+  <!-- Shared NuGet metadata. Every package in src/ gets the same version.
+       AppInfoPackageVersion is separate from Version so the sample can reference the local packages
+       by it while setting its own Version. -->
   <PropertyGroup>
-    <Version>0.1.0</Version>
+    <AppInfoPackageVersion>0.1.0</AppInfoPackageVersion>
+    <Version>$(AppInfoPackageVersion)</Version>
     <Authors>Kuba</Authors>
     <Copyright>Copyright (c) 2026 Kuba</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

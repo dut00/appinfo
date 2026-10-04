@@ -100,7 +100,8 @@ Each extension is a separate csproj with a ProjectReference to core (packed as a
 - `Program.cs` follows the draft: `AddAppInfo().WithConfigurationDetails().WithEnvironmentDetails().WithConnectionStrings().WithOwner(...).WithProperty("Team", "red")`, then `app.MapAppInfo()`.
 - `appsettings.json` contains a sample connection string with a password, to show masking.
 - `launchSettings.json` opens `/appinfo`.
-- The sample uses ProjectReference by default. Building with `-p:UseLocalPackages=true` switches to PackageReference against `./artifacts` (conditional ItemGroup in the csproj).
+- The sample uses ProjectReference by default. Building with `-p:UseLocalPackages=true` switches to PackageReference against `./artifacts` (conditional ItemGroup in the csproj). Package versions come from `AppInfoPackageVersion` in `Directory.Build.props` (separate from `Version`, which the sample overrides), listed in `Directory.Packages.props`.
+- `build/pack.ps1` (run with `pwsh ./build/pack.ps1`, or `powershell -ExecutionPolicy Bypass -File build/pack.ps1`; `-Version` overrides `AppInfoPackageVersion`) packs into `./artifacts` and removes `aspnetcore.appinfo*` from the NuGet global packages folder, because local packs reuse the same version and NuGet never refreshes a cached version.
 
 ## Tests (xUnit + Shouldly)
 - Shared helpers in `test/Infrastructure/`, compiled into every test project by `test/Directory.Build.props`: `TestApp` uses `WebApplication.CreateBuilder()` + `builder.WebHost.UseTestServer()`, in-memory configuration, then `GetAppInfoAsync()` (a parsed `JsonElement`) or `GetAppInfoStringAsync()` (the raw body).

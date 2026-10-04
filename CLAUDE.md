@@ -22,7 +22,9 @@ Guidance for Claude Code when working in this repository.
 dotnet build AspNetCore.AppInfo.slnx           # builds net8.0, net9.0 and net10.0
 dotnet test --solution AspNetCore.AppInfo.slnx # tests run on net8.0 and net10.0
 dotnet run --project samples/AspNetCore.AppInfo.Sample.Api   # then GET /appinfo
-./build/pack.ps1                               # packs into ./artifacts (local NuGet feed)
+pwsh ./build/pack.ps1                          # packs into ./artifacts (local NuGet feed), clears cached copies
+                                               # Windows PowerShell 5.1: powershell -ExecutionPolicy Bypass -File build/pack.ps1
+dotnet run --project samples/AspNetCore.AppInfo.Sample.Api -p:UseLocalPackages=true   # sample on the packed packages
 ```
 
 The SDK is pinned in `global.json` (10.0.x). The machine has the .NET 8 and .NET 10 runtimes but **not .NET 9**. net9.0 builds fine, but its tests can't run locally, so test projects target only `net8.0;net10.0`.
@@ -37,7 +39,7 @@ Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the ne
 - `samples/AspNetCore.AppInfo.Sample.Api/`: minimal API that uses the packages through ProjectReference. `-p:UseLocalPackages=true` switches it to `./artifacts`.
 - `Directory.Build.props`: shared TFMs, strict compiler settings and NuGet metadata. Projects under `src/` become packable automatically.
 - `.claude/agents/code-reviewer.md`: read-only review subagent that checks changes against the spec and these conventions.
-- `Directory.Packages.props`: Central Package Management. Add versions there, never in a csproj. `Microsoft.AspNetCore.TestHost` has one version per TFM.
+- `Directory.Packages.props`: Central Package Management. Add versions there, never in a csproj. The repo's own packages use `$(AppInfoPackageVersion)`; bump the version there (in `Directory.Build.props`), not in `<Version>`. `Microsoft.AspNetCore.TestHost` has one version per TFM.
 
 ## Conventions and gotchas
 

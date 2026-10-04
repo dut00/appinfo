@@ -4,6 +4,14 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
 
+  <!-- This repo's own packages, used by the sample with -p:UseLocalPackages=true (resolved from ./artifacts). -->
+  <ItemGroup>
+    <PackageVersion Include="AspNetCore.AppInfo" Version="$(AppInfoPackageVersion)" />
+    <PackageVersion Include="AspNetCore.AppInfo.Configuration" Version="$(AppInfoPackageVersion)" />
+    <PackageVersion Include="AspNetCore.AppInfo.ConnectionStrings" Version="$(AppInfoPackageVersion)" />
+    <PackageVersion Include="AspNetCore.AppInfo.Environment" Version="$(AppInfoPackageVersion)" />
+  </ItemGroup>
+
   <!-- Test dependencies -->
   <ItemGroup>
     <PackageVersion Include="xunit.v3" Version="4.0.1" />
