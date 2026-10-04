@@ -13,7 +13,7 @@ Guidance for Claude Code when working in this repository.
 ## Working rules
 
 - **Everything in the repo is written in English**: code, comments, XML docs, READMEs, docs, commit messages. The user writes to you in Polish, so answer in Polish.
-- **Never commit without asking.** After each plan step, run build and tests, summarize the result, then ask whether to commit and propose a message.
+- **Never commit without asking.** After each plan step, run build and tests, then run the `code-reviewer` subagent (`.claude/agents/code-reviewer.md`) on the uncommitted changes and fix or explicitly raise its findings. Then summarize the result, ask whether to commit and propose a message.
 - Follow the steps in `docs/PLAN.md` in order, and don't start features that are out of scope for v1.
 
 ## Commands
@@ -33,6 +33,7 @@ The SDK is pinned in `global.json` (10.0.x). The machine has the .NET 8 and .NET
 - `test/AspNetCore.AppInfo*.Tests/`: xUnit v3 + Shouldly. Integration tests use `WebApplication.CreateBuilder()` with `UseTestServer()`.
 - `samples/AspNetCore.AppInfo.Sample.Api/`: minimal API that uses the packages through ProjectReference. `-p:UseLocalPackages=true` switches it to `./artifacts`.
 - `Directory.Build.props`: shared TFMs, strict compiler settings and NuGet metadata. Projects under `src/` become packable automatically.
+- `.claude/agents/code-reviewer.md`: read-only review subagent that checks changes against the spec and these conventions.
 - `Directory.Packages.props`: Central Package Management. Add versions there, never in a csproj. `Microsoft.AspNetCore.TestHost` has one version per TFM.
 
 ## Conventions and gotchas
