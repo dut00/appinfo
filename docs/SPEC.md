@@ -1,13 +1,13 @@
-# Kudu.AppInfo – Specification
+# AspNetCore.AppInfo – Specification
 
 Version: 0.1 (draft) · Status: accepted for v1 implementation
 
-This document defines **what** Kudu.AppInfo does: public API, response contract and behavior.
+This document defines **what** AspNetCore.AppInfo does: public API, response contract and behavior.
 **How** it is built is described in [PLAN.md](PLAN.md). The original notes are in [draft.md](draft.md).
 
 ## 1. Purpose
 
-Kudu.AppInfo adds an HTTP endpoint, `/appinfo` by default, to ASP.NET Core applications. It returns a JSON document describing the running application. The idea comes from the `/healthz` liveness probe convention: a standard, well-known address that operators and tools can query without knowing the application.
+AspNetCore.AppInfo adds an HTTP endpoint, `/appinfo` by default, to ASP.NET Core applications. It returns a JSON document describing the running application. The idea comes from the `/healthz` liveness probe convention: a standard, well-known address that operators and tools can query without knowing the application.
 
 Typical questions it answers:
 - Which application and version is running here?
@@ -19,10 +19,10 @@ Typical questions it answers:
 
 | Package | Depends on | Adds |
 | --- | --- | --- |
-| `Kudu.AppInfo` | `Microsoft.AspNetCore.App` (framework reference) | Endpoint, core fields, owner, custom properties, extensibility API |
-| `Kudu.AppInfo.Configuration` | `Kudu.AppInfo` | `ConfigurationsFiles` |
-| `Kudu.AppInfo.Environment` | `Kudu.AppInfo` | `ApplicationProcessUptime`, `HostName`, `ContentRootPath`, `AssemblyLocation` |
-| `Kudu.AppInfo.ConnectionStrings` | `Kudu.AppInfo` | `ConnectionStrings` (masked) |
+| `AspNetCore.AppInfo` | `Microsoft.AspNetCore.App` (framework reference) | Endpoint, core fields, owner, custom properties, extensibility API |
+| `AspNetCore.AppInfo.Configuration` | `AspNetCore.AppInfo` | `ConfigurationsFiles` |
+| `AspNetCore.AppInfo.Environment` | `AspNetCore.AppInfo` | `ApplicationProcessUptime`, `HostName`, `ContentRootPath`, `AssemblyLocation` |
+| `AspNetCore.AppInfo.ConnectionStrings` | `AspNetCore.AppInfo` | `ConnectionStrings` (masked) |
 
 - Supported target frameworks: `net8.0`, `net9.0`, `net10.0`.
 - All packages share one version number.
@@ -32,10 +32,10 @@ Typical questions it answers:
 ### 3.1 Registration
 
 ```csharp
-using Kudu.AppInfo;
-using Kudu.AppInfo.Configuration;
-using Kudu.AppInfo.ConnectionStrings;
-using Kudu.AppInfo.Environment;
+using AspNetCore.AppInfo;
+using AspNetCore.AppInfo.Configuration;
+using AspNetCore.AppInfo.ConnectionStrings;
+using AspNetCore.AppInfo.Environment;
 
 builder.Services.AddAppInfo(options =>
     {
@@ -70,7 +70,7 @@ app.MapAppInfo("/custom-appinfo-path"); // GET /custom-appinfo-path
 app.MapAppInfo().RequireAuthorization("Ops");
 ```
 
-- `IEndpointRouteBuilder.MapAppInfo(string pattern = "/appinfo")` maps a `GET` endpoint named `AppInfo`.
+- `IEndpointRouteBuilder.MapAppInfo(string pattern = "/appinfo")` maps a `GET` endpoint with the display name `AppInfo`. It sets no endpoint name, so `MapAppInfo` can be called more than once with different patterns. Chain `.WithName(...)` to make it addressable for link generation.
 - It returns `IEndpointConventionBuilder`, so every standard convention applies: `RequireAuthorization`, `RequireHost`, `RequireCors`, `CacheOutput`, and so on.
 - Calling `MapAppInfo` without `AddAppInfo` throws `InvalidOperationException` with a message that tells the developer to call `AddAppInfo()`.
 
@@ -128,7 +128,7 @@ Errors follow ASP.NET Core defaults:
 ### 4.3 Ordering and key rules
 
 - The JSON keeps keys in the order contributors run: core fields first, then the `With*` calls in the order they were made. Within one contributor, keys keep the order in which they were set.
-- If two contributors set the same key, the **later one wins** and a warning is logged under the `Kudu.AppInfo` category.
+- If two contributors set the same key, the **later one wins** and a warning is logged under the `AspNetCore.AppInfo` category.
 - Keys are case-sensitive.
 - A value of `null` is still written as `"Key": null`.
 
@@ -186,7 +186,7 @@ URI-style connection strings, such as `postgres://user:pass@host/db` or `mongodb
 ## 7. Security considerations
 
 - `/appinfo` exposes internal details: file paths, host names and infrastructure addresses. **It is open by default**, and the application owner must protect it, for example with `.RequireAuthorization()`, `.RequireHost()` or network policies.
-- The core package never emits secrets on its own. Only explicitly enabled packages add potentially sensitive data, and `Kudu.AppInfo.ConnectionStrings` always masks.
+- The core package never emits secrets on its own. Only explicitly enabled packages add potentially sensitive data, and `AspNetCore.AppInfo.ConnectionStrings` always masks.
 - Custom properties (`WithProperty`) are emitted as-is. Their content is the user's responsibility.
 - No caching is applied. Responses reflect the state at request time.
 
@@ -195,5 +195,5 @@ URI-style connection strings, such as `postgres://user:pass@host/db` or `mongodb
 - Health status or liveness semantics. Use ASP.NET Core Health Checks for that.
 - An HTML UI. The endpoint is JSON only.
 - Writing or changing configuration.
-- `Kudu.AppInfo.Serilog`. A logging section from `Serilog:WriteTo`, with masking, is planned after v1.
+- `AspNetCore.AppInfo.Serilog`. A logging section from `Serilog:WriteTo`, with masking, is planned after v1.
 - CI pipelines and publishing to nuget.org.

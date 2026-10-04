@@ -1,4 +1,4 @@
-# Kudu.AppInfo
+# AspNetCore.AppInfo
 
 A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core applications.
 The endpoint returns JSON describing the running application: name, version, environment, owner, and more through extension packages.
@@ -9,10 +9,10 @@ The endpoint returns JSON describing the running application: name, version, env
 
 | Package | Description |
 | --- | --- |
-| `Kudu.AppInfo` | Core: endpoint, application name, version, environment, owner, custom properties |
-| `Kudu.AppInfo.Configuration` | Lists loaded configuration files |
-| `Kudu.AppInfo.Environment` | Process uptime, host name, content root, assembly location |
-| `Kudu.AppInfo.ConnectionStrings` | Connection strings with secrets masked |
+| `AspNetCore.AppInfo` | Core: endpoint, application name, version, environment, owner, custom properties |
+| `AspNetCore.AppInfo.Configuration` | Lists loaded configuration files |
+| `AspNetCore.AppInfo.Environment` | Process uptime, host name, content root, assembly location |
+| `AspNetCore.AppInfo.ConnectionStrings` | Connection strings with secrets masked |
 
 ## License
 

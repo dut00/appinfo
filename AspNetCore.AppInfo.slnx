@@ -1,0 +1,5 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/AspNetCore.AppInfo/AspNetCore.AppInfo.csproj" />
+  </Folder>
+</Solution>
