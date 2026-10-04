@@ -2,6 +2,20 @@
 
 [![CI](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml)
 
+> **Friday, 4:47 PM.** Invoices on Stage are coming out with last month's prices. QA opens a ticket against `billing-api`.
+>
+> The pipeline says version 2.3.1 went out on Tuesday, and that version fixed exactly this bug. So why is it back? Someone on the team guesses the deploy failed on one of the three hosts. Someone else thinks Stage is reading the wrong `appsettings` file. A third person remembers that last month somebody "temporarily" pointed Stage at a copy of the production database, but nobody knows whether that was ever reverted. Billing is one of forty-odd services, each with its own version on Dev, Stage and Prod, half on Kubernetes and half on old VMs. The last person who knew who owns which service left in spring. So people SSH into machines, read logs and post *"does anyone know who owns billing-api?"* on Slack.
+>
+> Two hours later the answer turns up: host `apps-host-02` was still running 2.2.9, `appsettings.Stage.json` was missing there, and the connection string pointed at `prod-db-copy`.
+>
+> With `/appinfo`, it takes one request:
+>
+> ```
+> curl https://apps-host-02/appinfo
+> ```
+>
+> `"Version": "2.2.9.0"`, `"ConfigurationsFiles"` with only `appsettings.json`, `"ConnectionStrings"` showing `Data Source=prod-db-copy;...;Password=***`, and `"Owner": "billing-team@company.com"`. That's everything, in one JSON, without logging in anywhere. Five minutes instead of two hours, and nobody had to look at a password to get there.
+
 A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core applications. Like `/healthz` for liveness, it gives operators and tools one well-known address that answers: *which application and version runs here, in which environment, who owns it, and how is it configured?*
 
 ```json
