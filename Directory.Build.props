@@ -20,8 +20,8 @@
     <Copyright>Copyright (c) 2026 Kuba</Copyright>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <PackageTags>aspnetcore;appinfo;diagnostics;endpoint</PackageTags>
-    <PackageProjectUrl>https://github.com/dut00/aspnetcore-appinfo</PackageProjectUrl>
-    <RepositoryUrl>https://github.com/dut00/aspnetcore-appinfo</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/dut00/appinfo</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/dut00/appinfo</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>

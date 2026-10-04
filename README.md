@@ -1,6 +1,6 @@
 # <img src="assets/icon.png" alt="" width="48" height="48" align="absmiddle"> Dut00.AppInfo
 
-[![CI](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dut00/aspnetcore-appinfo/actions/workflows/ci.yml)
+[![CI](https://github.com/dut00/appinfo/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dut00/appinfo/actions/workflows/ci.yml)
 [![NuGet](https://img.shields.io/nuget/vpre/Dut00.AppInfo?label=NuGet)](https://www.nuget.org/packages/Dut00.AppInfo)
 
 > **Friday, 4:47 PM.** Invoices on Stage are coming out with last month's prices. QA opens a ticket against `billing-api`.
@@ -176,7 +176,7 @@ The workflow tests, packs with the tag's version, pushes the packages and symbol
 
 One-time setup:
 
-1. **nuget.org** > Trusted Publishing > add a policy: Repository Owner `dut00`, Repository `aspnetcore-appinfo`, Workflow File `release.yml` (file name only), Environment `nuget`. Its scope must allow **pushing new packages** (for example the pattern `Dut00.AppInfo*`), because the first release creates the package IDs.
+1. **nuget.org** > Trusted Publishing > add a policy: Repository Owner `dut00`, Repository `appinfo`, Workflow File `release.yml` (file name only), Environment `nuget`. Its scope must allow **pushing new packages** (for example the pattern `Dut00.AppInfo*`), because the first release creates the package IDs.
 2. **GitHub** > Settings > Environments > `nuget`: add a required reviewer. Under "Deployment branches and tags", choose "No restriction" or add a tag rule `v*`; otherwise tag-triggered runs are blocked.
 3. **GitHub** > Settings > Secrets and variables > Actions > Variables: `NUGET_USER` = the nuget.org profile name (not the e-mail).
 4. Recommended: a tag ruleset (Settings > Rules) that restricts creating, updating and deleting `v*` tags.

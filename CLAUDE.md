@@ -4,7 +4,7 @@ Guidance for Claude Code when working in this repository.
 
 ## Project
 
-`Dut00.AppInfo` is a family of NuGet packages (renamed from `AspNetCore.AppInfo`, whose ID is reserved on nuget.org) that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the running application. GitHub repo: `dut00/aspnetcore-appinfo`.
+`Dut00.AppInfo` is a family of NuGet packages (renamed from `AspNetCore.AppInfo`, whose ID is reserved on nuget.org) that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the running application. GitHub repo: `dut00/appinfo`.
 
 - [docs/SPEC.md](docs/SPEC.md) is the behavioral contract: public API, JSON fields, masking rules, edge cases. **If the code, the plan and the spec disagree, the spec wins.** Update the spec when behavior changes on purpose.
 - [docs/PLAN.md](docs/PLAN.md) holds the implementation plan and the numbered steps. Keep it current when something changes during implementation.

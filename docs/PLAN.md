@@ -5,7 +5,7 @@ Status: **all 11 steps are implemented** (v1). The repo started with only `draft
 
 **All code, comments, XML docs, READMEs and this plan are written in English.**
 
-Naming: packages, namespaces and projects use the `Dut00.AppInfo.*` prefix; the GitHub repo is `dut00/aspnetcore-appinfo`. The original notes used `Kudu.AppInfo`. The project was first named `AspNetCore.AppInfo` (mirroring `AspNetCore.HealthChecks.*`), but nuget.org rejected that ID on the first release: "The package ID is reserved". It was renamed to the owner-specific `Dut00.AppInfo`, whose prefix can be reserved for this account.
+Naming: packages, namespaces and projects use the `Dut00.AppInfo.*` prefix; the GitHub repo is `dut00/appinfo`. The original notes used `Kudu.AppInfo`. The project was first named `AspNetCore.AppInfo` (mirroring `AspNetCore.HealthChecks.*`), but nuget.org rejected that ID on the first release: "The package ID is reserved". It was renamed to the owner-specific `Dut00.AppInfo`, whose prefix can be reserved for this account.
 
 The behavioral contract (public API, JSON fields, masking rules, edge cases) is defined in [SPEC.md](SPEC.md). If this plan and SPEC.md disagree, SPEC.md wins.
 
