@@ -50,7 +50,14 @@ A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core appl
 | `Dut00.AppInfo.Environment` | `ApplicationProcessUptime`, `HostName`, `ContentRootPath`, `AssemblyLocation` |
 | `Dut00.AppInfo.ConnectionStrings` | `ConnectionStrings`, with passwords, keys and other secrets masked |
 
-All packages target `net8.0`, `net9.0` and `net10.0` and share one version. They are not on nuget.org yet; see [Local packages](#local-packages).
+All packages target `net8.0`, `net9.0` and `net10.0` and share one version. They are on [nuget.org](https://www.nuget.org/packages/Dut00.AppInfo) as previews. Install the core package and the ones you need:
+
+```bash
+dotnet add package Dut00.AppInfo --prerelease
+dotnet add package Dut00.AppInfo.Configuration --prerelease
+dotnet add package Dut00.AppInfo.Environment --prerelease
+dotnet add package Dut00.AppInfo.ConnectionStrings --prerelease
+```
 
 ## Quick start
 

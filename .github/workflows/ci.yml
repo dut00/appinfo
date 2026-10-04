@@ -1,9 +1,23 @@
 name: CI
 
+# Changes that can't affect the build are skipped. Package READMEs (src/**/README.md) and assets/ are not
+# listed: they go into the packages, so the pack job must still run for them.
 on:
   push:
     branches: [master]
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - 'docs/**'
+      - 'CLAUDE.md'
+      - '.claude/**'
   pull_request:
+    paths-ignore:
+      - 'README.md'
+      - 'LICENSE'
+      - 'docs/**'
+      - 'CLAUDE.md'
+      - '.claude/**'
   workflow_dispatch:
 
 permissions:
