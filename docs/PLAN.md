@@ -83,8 +83,8 @@ Namespaces match package names (`AspNetCore.AppInfo`, `AspNetCore.AppInfo.Enviro
 Each extension is a separate csproj with a ProjectReference to core (packed as a NuGet dependency), one contributor class and one extension-method class.
 
 - **AspNetCore.AppInfo.Configuration**: `WithConfigurationDetails()` adds `ConfigurationsFiles: string[]`.
-  - Source: `IConfiguration as IConfigurationRoot`, then `Providers.OfType<FileConfigurationProvider>()`, then `Source.FileProvider?.GetFileInfo(Source.Path).PhysicalPath ?? Source.Path`.
-  - Only files that exist are listed by default. The `IncludeMissingOptionalFiles` option includes missing optional files too.
+  - Source: `IConfiguration as IConfigurationRoot`, then `Providers.OfType<FileConfigurationProvider>()`; the path is the file's `PhysicalPath`, else `PhysicalFileProvider.Root` + path for a missing file, else `Source.Path`. `ChainedConfigurationProvider.Configuration` is searched too, once per root.
+  - Missing optional files are left out by default; the `IncludeMissingOptionalFiles` option includes them. Required files are always listed. Chained configurations (`AddConfiguration`) are searched too.
 - **AspNetCore.AppInfo.Environment**: `WithEnvironmentDetails()` adds four keys:
   - `ApplicationProcessUptime`: process start time to now, as a TimeSpan. Computed on each request with the app's `TimeProvider` if registered (the package registers none), otherwise `TimeProvider.System`, so tests can control it.
   - `HostName`: `System.Environment.MachineName`

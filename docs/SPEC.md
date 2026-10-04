@@ -181,9 +181,10 @@ URI-style connection strings, such as `postgres://user:pass@host/db` or `mongodb
 
 ## 6. Configuration files detection
 
-- The list includes every provider of type `FileConfigurationProvider` in the root `IConfiguration` (JSON, XML, INI, user secrets).
-- Paths are resolved to absolute physical paths through the provider's `IFileProvider`. If that's not possible, the configured relative path is used.
-- By default, optional files that don't exist are left out. `ConfigurationDetailsOptions.IncludeMissingOptionalFiles = true` includes them.
+- The list includes every provider of type `FileConfigurationProvider` in the root `IConfiguration` (JSON, XML, INI, user secrets), in load order. Configurations added with `AddConfiguration(...)` (`ChainedConfigurationProvider`) are searched too, each root once.
+- Paths are resolved to absolute physical paths through the provider's `IFileProvider`. A missing file under a `PhysicalFileProvider` gets the path where it would be. Otherwise (for example an embedded file provider) the configured path is used.
+- By default, optional files that don't exist are left out. `ConfigurationDetailsOptions.IncludeMissingOptionalFiles = true` includes them. Required files are always listed, even if deleted after startup.
+- The list is computed on every request. If `IConfiguration` is not an `IConfigurationRoot`, the list is empty.
 
 ## 7. Security considerations
 

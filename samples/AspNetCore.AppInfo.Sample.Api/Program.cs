@@ -1,9 +1,11 @@
 using AspNetCore.AppInfo;
+using AspNetCore.AppInfo.Configuration;
 using AspNetCore.AppInfo.Environment;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddAppInfo()
+    .WithConfigurationDetails()
     .WithEnvironmentDetails()
     .WithOwner(o => o.Owner = "red_team@company.com")
     .WithProperty("Team", "red");
