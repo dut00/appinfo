@@ -4,11 +4,13 @@
   </Folder>
   <Folder Name="/src/">
     <Project Path="src/AspNetCore.AppInfo.Configuration/AspNetCore.AppInfo.Configuration.csproj" />
+    <Project Path="src/AspNetCore.AppInfo.ConnectionStrings/AspNetCore.AppInfo.ConnectionStrings.csproj" />
     <Project Path="src/AspNetCore.AppInfo.Environment/AspNetCore.AppInfo.Environment.csproj" />
     <Project Path="src/AspNetCore.AppInfo/AspNetCore.AppInfo.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/AspNetCore.AppInfo.Configuration.Tests/AspNetCore.AppInfo.Configuration.Tests.csproj" />
+    <Project Path="test/AspNetCore.AppInfo.ConnectionStrings.Tests/AspNetCore.AppInfo.ConnectionStrings.Tests.csproj" />
     <Project Path="test/AspNetCore.AppInfo.Environment.Tests/AspNetCore.AppInfo.Environment.Tests.csproj" />
     <Project Path="test/AspNetCore.AppInfo.Tests/AspNetCore.AppInfo.Tests.csproj" />
   </Folder>

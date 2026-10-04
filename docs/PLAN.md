@@ -91,9 +91,9 @@ Each extension is a separate csproj with a ProjectReference to core (packed as a
   - `ContentRootPath`: from `IHostEnvironment`
   - `AssemblyLocation`: `Assembly.GetEntryAssembly()?.Location`, or `null` when empty (single-file apps)
 - **AspNetCore.AppInfo.ConnectionStrings**: `WithConnectionStrings(Action<ConnectionStringsOptions>? configure = null)` adds `ConnectionStrings: { "<name>": "<masked value>" }`, read from `IConfiguration.GetSection("ConnectionStrings")`.
-  - Masking parses each value with `DbConnectionStringBuilder`. Keys listed in `SensitiveKeys` get the value `***`.
-  - Default `SensitiveKeys` (case-insensitive): Password, Pwd, User ID, UID, User, Username, AccountKey, SharedAccessKey, SharedAccessSignature, AccessKey, Secret, Token, ApiKey.
-  - If a value can't be parsed, the whole value becomes `***`.
+  - Masking parses each value with `DbConnectionStringBuilder`. Keys that contain an entry of `SensitiveKeys` get the value `***`, and so do values that hide a secret (nested `Password=` pairs, URLs with credentials or a query). See SPEC §5 for the full fail-closed rules.
+  - Default `SensitiveKeys` (case-insensitive, matched as substrings): Password, Pwd, PSW, Pass, User ID, UID, User, Username, Key, AccountKey, SharedAccessKey, SharedAccessSignature, AccessKey, ApiKey, Secret, Token, Credential, Authorization, Signature, Bearer.
+  - If a value can't be parsed, is URI-style, isn't in `key=value;` format (for example Redis) or has a split ODBC brace, the whole value becomes `***`.
   - Both `SensitiveKeys` and the mask string can be changed in options.
 
 ## Sample: `samples/AspNetCore.AppInfo.Sample.Api`

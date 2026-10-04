@@ -8,6 +8,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\AspNetCore.AppInfo\AspNetCore.AppInfo.csproj" />
     <ProjectReference Include="..\..\src\AspNetCore.AppInfo.Configuration\AspNetCore.AppInfo.Configuration.csproj" />
+    <ProjectReference Include="..\..\src\AspNetCore.AppInfo.ConnectionStrings\AspNetCore.AppInfo.ConnectionStrings.csproj" />
     <ProjectReference Include="..\..\src\AspNetCore.AppInfo.Environment\AspNetCore.AppInfo.Environment.csproj" />
   </ItemGroup>
 

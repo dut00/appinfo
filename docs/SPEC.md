@@ -166,18 +166,31 @@ Errors follow ASP.NET Core defaults:
 
 ## 5. Connection string masking
 
-1. Each value under `ConnectionStrings:*` is parsed with `DbConnectionStringBuilder`.
-2. For every key that matches `SensitiveKeys` (case-insensitive), the value is replaced with `Mask`.
-3. The masked string is rebuilt from the builder. Key casing and order are kept, but formatting may be normalized.
-4. If parsing fails, the **whole value** is replaced with `Mask`. A secret must never leak because of a parse error.
-5. An empty or whitespace value is written as-is.
+Every value under `ConnectionStrings:*` that has a value of its own is masked. Nested sections (`ConnectionStrings:Name:Key`) are left out. Masking **fails closed**: when in doubt, the whole value is replaced with `Mask`.
+
+1. An empty or whitespace value is written as-is.
+2. The **whole value** is masked when:
+   - it starts with a URI scheme (`postgres://`, `mongodb://`, `redis://`, ...), because URI-style strings are not key/value pairs (defense in depth: the key rule below catches these too);
+   - `DbConnectionStringBuilder` can't parse it, or it has no keys;
+   - any parsed key doesn't look like a connection string key (letters, digits, spaces, `.`, `-`, `_`). This catches formats such as Redis `host:6379,password=...`, which the builder would otherwise read as one odd key;
+   - any parsed value that starts with `{` isn't a properly closed ODBC braced value (it must end with `}`, and no single `}` may remain inside once `}}` escapes are removed), or a value ends with `}` without starting with `{`. The builder doesn't treat braces as quoting, so `PWD={ab;cd=secret}` or `PWD={ab}};cd={secret}` would otherwise be split and print the second half;
+   - anything else goes wrong while masking.
+3. A **key's value** is masked when the key **contains** any entry of `SensitiveKeys`, ignoring case. `Password` therefore also covers `Proxy Password` and `SSL Password`, and `Key` covers `AppKey`, `Application Key` and `private_key`. Short entries also mask harmless keys such as `User Instance` or `KeyFile` (over-masking is accepted).
+4. Any other value is masked when it hides a secret:
+   - it contains a sensitive entry followed (after optional spaces or quotes) by `=` or `:`, i.e. a nested connection string such as `Extended Properties="Excel 12.0;Password=xyz"`;
+   - it contains `@` anywhere: credentials in an address (`user:pass@host`, `user/pass@host`, `https://user:pass@host`, ...);
+   - it contains `?` or `#` together with `/` or `:`: a query or fragment in an address, such as a SAS URL in `BlobEndpoint=https://...?sv=...&sig=...`;
+   - it is an absolute URI with user info, a query or a fragment.
+   - These rules work on the text, so addresses that aren't valid URIs are caught too. They over-mask some harmless values, for example `Application Name=app@prod`, `Host=hockey:5432` (contains `Key` + `:`) or SQLite's `Data Source=file:app.db?mode=memory&cache=shared`; that is accepted.
+   - Known limitations: a secret in the **path** of an address (for example a webhook token in `https://host/api/webhooks/1/TOKEN`), or a secret under a key name that no `SensitiveKeys` entry covers (for example `Sas=sv=...&sig=...` or `Cert=-----BEGIN PRIVATE KEY-----`), is not detected. Add such keys to `SensitiveKeys`, or don't keep these values under `ConnectionStrings`. Unicode lookalikes of `@`, `=` or `/` are not treated as separators, matching how providers parse them.
+5. The result is rebuilt from the parsed pairs. Key casing and order are kept (the original spelling of each key is restored only when it equals the parsed key ignoring case); spacing and quoting may be normalized. When a key appears twice, only the last value is kept, masked by the same rules.
 
 | Option | Default |
 | --- | --- |
-| `SensitiveKeys` | `Password`, `Pwd`, `User ID`, `UID`, `User`, `Username`, `AccountKey`, `SharedAccessKey`, `SharedAccessSignature`, `AccessKey`, `Secret`, `Token`, `ApiKey` |
-| `Mask` | `***` |
+| `SensitiveKeys` | `Password`, `Pwd`, `PSW`, `Pass`, `User ID`, `UID`, `User`, `Username`, `Key`, `AccountKey`, `SharedAccessKey`, `SharedAccessSignature`, `AccessKey`, `ApiKey`, `Secret`, `Token`, `Credential`, `Authorization`, `Signature`, `Bearer` (case-insensitive set, matched as substrings; blank entries are ignored) |
+| `Mask` | `***` (must not be `null`) |
 
-URI-style connection strings, such as `postgres://user:pass@host/db` or `mongodb://…`, are not key/value pairs. Under rule 4 they are fully masked in v1.
+Connection string names are user data and are emitted as-is, regardless of `KeyNamingPolicy` (§4.4).
 
 ## 6. Configuration files detection
 
