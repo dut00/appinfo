@@ -15,7 +15,7 @@ internal sealed class TestApp : IAsyncDisposable
 
     private readonly WebApplication _app;
 
-    private TestApp(WebApplication app, ListLoggerProvider logs)
+    private TestApp(WebApplication app, InMemoryLoggerProvider logs)
     {
         _app = app;
         Logs = logs;
@@ -24,7 +24,7 @@ internal sealed class TestApp : IAsyncDisposable
 
     public HttpClient Client { get; }
 
-    public ListLoggerProvider Logs { get; }
+    public InMemoryLoggerProvider Logs { get; }
 
     /// <summary>
     /// Builds and starts the application.
@@ -45,7 +45,7 @@ internal sealed class TestApp : IAsyncDisposable
         });
         builder.WebHost.UseTestServer();
 
-        var logs = new ListLoggerProvider();
+        var logs = new InMemoryLoggerProvider();
         builder.Logging.ClearProviders().AddProvider(logs);
 
         configure(builder);
@@ -53,7 +53,16 @@ internal sealed class TestApp : IAsyncDisposable
         var app = builder.Build();
         try
         {
-            (configureApp ?? (a => a.MapAppInfo())).Invoke(app);
+            // (configureApp ?? (a => a.MapAppInfo())).Invoke(app);
+            if (configureApp is not null)
+            {
+                configureApp(app);
+            }
+            else
+            {
+                app.MapAppInfo();
+            }
+
             await app.StartAsync(TestContext.Current.CancellationToken);
         }
         catch
@@ -78,7 +87,7 @@ internal sealed class TestApp : IAsyncDisposable
     public async Task<JsonElement> GetAppInfoAsync(string path = AppInfoEndpointRouteBuilderExtensions.DefaultPattern)
     {
         using var document = JsonDocument.Parse(await GetAppInfoStringAsync(path));
-        return document.RootElement.Clone();
+        return document.RootElement.Clone(); // .Clone() because using `using` causes the object to be destroyed when the method is exited
     }
 
     public async ValueTask DisposeAsync()

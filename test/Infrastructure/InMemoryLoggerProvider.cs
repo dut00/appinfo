@@ -6,19 +6,19 @@ namespace Dut00.AppInfo.Testing;
 /// <summary>
 /// Collects log entries in memory so tests can assert on them.
 /// </summary>
-internal sealed class ListLoggerProvider : ILoggerProvider
+internal sealed class InMemoryLoggerProvider : ILoggerProvider
 {
     private readonly ConcurrentQueue<LogEntry> _entries = new();
 
     public IReadOnlyList<LogEntry> Entries => [.. _entries];
 
-    public ILogger CreateLogger(string categoryName) => new ListLogger(categoryName, _entries);
+    public ILogger CreateLogger(string categoryName) => new InMemoryLogger(categoryName, _entries);
 
     public void Dispose()
     {
     }
 
-    private sealed class ListLogger(string category, ConcurrentQueue<LogEntry> entries) : ILogger
+    private sealed class InMemoryLogger(string category, ConcurrentQueue<LogEntry> entries) : ILogger
     {
         public IDisposable? BeginScope<TState>(TState state)
             where TState : notnull => null;
