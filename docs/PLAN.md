@@ -11,7 +11,7 @@ The behavioral contract (public API, JSON fields, masking rules, edge cases) is 
 
 Agreed decisions:
 - Target frameworks: `net8.0;net9.0;net10.0`
-- Packages: core + separate extension packages. v1 ships **Configuration, Environment and ConnectionStrings (masked)**. Serilog comes later.
+- Packages: core + separate extension packages. v1 ships **Configuration, Environment and ConnectionStrings (masked)**.
 - Architecture: contributors implementing `IAppInfoContributor`, registered in DI. API: `AddAppInfo()` returns `IAppInfoBuilder`, then `.WithXxx()`. Endpoint: `MapAppInfo(pattern = "/appinfo")`.
 - Core fields: ApplicationName, Version, Environment, IsProduction, plus `WithOwner` and custom fields (`WithProperty`)
 - Flat JSON: extension fields sit at the root. Key casing is configurable, PascalCase by default.
@@ -139,7 +139,7 @@ After **every** step: run `dotnet build` and `dotnet test` (once tests exist), r
 8. **Configuration package + tests**, then add it to the sample.
 9. **ConnectionStrings package + tests** (masker unit tests and an integration test), then add it to the sample.
 10. **Packaging and local feed**: per-package READMEs, `build/pack.ps1`, the `UseLocalPackages` switch in the sample, then check the `.nupkg` contents.
-11. **Documentation**: root `README.md` in English (quick start, every `With*` method, sample response, security warning, how to write a custom contributor, roadmap). Update `docs/PLAN.md` if anything changed during implementation.
+11. **Documentation**: root `README.md` in English (quick start, every `With*` method, sample response, security warning, how to write a custom contributor). Update `docs/PLAN.md` if anything changed during implementation.
 
 ## Verification
 1. `dotnet build -c Release` builds green for net8.0, net9.0 and net10.0. SDK 10 can build net9.0 without the net9 runtime.
@@ -148,5 +148,5 @@ After **every** step: run `dotnet build` and `dotnet test` (once tests exist), r
 4. `pwsh ./build/pack.ps1` produces 4 `.nupkg` and 4 `.snupkg` files in `./artifacts`. Inspect them for lib/net8.0, net9.0 and net10.0, the README, and the dependency on Dut00.AppInfo.
 5. `dotnet run --project samples/Dut00.AppInfo.Sample.Api -p:UseLocalPackages=true`: the sample runs against the local-feed packages.
 
-## Out of scope for v1 (listed in the README roadmap)
-Dut00.AppInfo.Serilog (`Serilog:WriteTo` section with masking). (CI, Dependabot and the nuget.org release workflow were added after v1.)
+## Out of scope for v1
+Dut00.AppInfo.Serilog (`Serilog:WriteTo` section with masking) was planned for after v1, then dropped. (CI, Dependabot and the nuget.org release workflow were added after v1.)

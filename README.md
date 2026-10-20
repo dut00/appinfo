@@ -188,10 +188,6 @@ One-time setup:
 3. **GitHub** > Settings > Secrets and variables > Actions > Variables: `NUGET_USER` = the nuget.org profile name (not the e-mail).
 4. Recommended: a tag ruleset (Settings > Rules) that restricts creating, updating and deleting `v*` tags.
 
-## Roadmap
-
-- `Dut00.AppInfo.Serilog`: the configured Serilog sinks (`Serilog:WriteTo`), with secrets masked.
-
 ## License
 
 [MIT](LICENSE)
