@@ -1,6 +1,6 @@
 # Dut00.AppInfo – Specification
 
-Version: 0.1 (draft) · Status: v1 implemented
+Version: 0.2 (draft) · Status: v1 implemented; the v0.2 additions (Build, Runtime, Container, Server, process fields) are planned, see PLAN.md steps 12–18
 
 This document defines **what** Dut00.AppInfo does: public API, response contract and behavior.
 **How** it is built is described in [PLAN.md](PLAN.md). The original notes are in [draft.md](draft.md).
@@ -14,6 +14,8 @@ Typical questions it answers:
 - Which environment is it running in, and is it production?
 - Who owns it?
 - Which configuration files were loaded, and on which host?
+- Which commit and build produced the running binary?
+- Which .NET runtime, OS and architecture is it running on, inside which container or pod, and on which addresses does it listen?
 
 ## 2. Packages
 
@@ -21,11 +23,16 @@ Typical questions it answers:
 | --- | --- | --- |
 | `Dut00.AppInfo` | `Microsoft.AspNetCore.App` (framework reference) | Endpoint, core fields, owner, custom properties, extensibility API |
 | `Dut00.AppInfo.Configuration` | `Dut00.AppInfo` | `ConfigurationsFiles` |
-| `Dut00.AppInfo.Environment` | `Dut00.AppInfo` | `ApplicationProcessUptime`, `HostName`, `ContentRootPath`, `AssemblyLocation` |
+| `Dut00.AppInfo.Environment` | `Dut00.AppInfo` | `ApplicationProcessUptime`, `ProcessId`, `ProcessStartTime`, `HostName`, `ContentRootPath`, `AssemblyLocation` |
 | `Dut00.AppInfo.ConnectionStrings` | `Dut00.AppInfo` | `ConnectionStrings` (masked) |
+| `Dut00.AppInfo.Build` | `Dut00.AppInfo` | `Build`: informational version, commit, branch, build ID |
+| `Dut00.AppInfo.Runtime` | `Dut00.AppInfo` | `Runtime`: .NET runtime, runtime identifier, OS, architectures |
+| `Dut00.AppInfo.Container` | `Dut00.AppInfo` | `Container`: container and Kubernetes detection, pod, namespace, node |
+| `Dut00.AppInfo.Server` | `Dut00.AppInfo` | `Urls`: the addresses the server listens on |
 
 - Supported target frameworks: `net8.0`, `net9.0`, `net10.0`.
 - All packages share one version number.
+- No package depends on anything beyond `Dut00.AppInfo` and the ASP.NET Core shared framework.
 
 ## 3. Public API
 
@@ -33,9 +40,13 @@ Typical questions it answers:
 
 ```csharp
 using Dut00.AppInfo;
+using Dut00.AppInfo.Build;
 using Dut00.AppInfo.Configuration;
 using Dut00.AppInfo.ConnectionStrings;
+using Dut00.AppInfo.Container;
 using Dut00.AppInfo.Environment;
+using Dut00.AppInfo.Runtime;
+using Dut00.AppInfo.Server;
 
 builder.Services.AddAppInfo(options =>
     {
@@ -44,6 +55,10 @@ builder.Services.AddAppInfo(options =>
     .WithConfigurationDetails()
     .WithEnvironmentDetails()
     .WithConnectionStrings(o => o.SensitiveKeys.Add("ClientSecret"))
+    .WithBuildDetails()
+    .WithRuntimeDetails()
+    .WithContainerDetails()
+    .WithServerAddresses()
     .WithOwner("red_team@company.com")
     .WithProperty("Team", "red")
     .WithProperty("StartedBy", sp => sp.GetRequiredService<IMyService>().User);
@@ -59,8 +74,12 @@ builder.Services.AddAppInfo(options =>
 | `IAppInfoBuilder.WithConfigurationDetails(Action<ConfigurationDetailsOptions>? configure = null)` | Configuration | Adds `ConfigurationsFiles`. |
 | `IAppInfoBuilder.WithEnvironmentDetails()` | Environment | Adds the environment fields. |
 | `IAppInfoBuilder.WithConnectionStrings(Action<ConnectionStringsOptions>? configure = null)` | ConnectionStrings | Adds masked `ConnectionStrings`. |
+| `IAppInfoBuilder.WithBuildDetails(Action<BuildDetailsOptions>? configure = null)` | Build | Adds `Build`. See §7. |
+| `IAppInfoBuilder.WithRuntimeDetails()` | Runtime | Adds `Runtime`. |
+| `IAppInfoBuilder.WithContainerDetails(Action<ContainerDetailsOptions>? configure = null)` | Container | Adds `Container`. See §8. |
+| `IAppInfoBuilder.WithServerAddresses()` | Server | Adds `Urls`. |
 
-All `With*` methods return `IAppInfoBuilder` so calls can be chained. Each method lives in its package's namespace.
+All `With*` methods return `IAppInfoBuilder` so calls can be chained. Each method lives in its package's namespace. Every `With*` method of an extension package is safe to call more than once: its contributor is registered once, and every `configure` delegate is applied. (`WithOwner` and `WithProperty` follow their own rules above.)
 
 ### 3.2 Endpoint
 
@@ -103,7 +122,9 @@ public sealed class AppInfoContext
 | Method | `GET` |
 | Success status | `200 OK` |
 | Content-Type | `application/json; charset=utf-8` |
-| Body | A single JSON object, flat at the root |
+| Body | A single JSON object (see the shape rule below) |
+
+Shape rule: a package that adds unrelated single values writes them as keys at the root (`HostName`, `Urls`). A package that adds a set of related values groups them under **one root key whose value is an object** (`Build`, `Runtime`, `Container`). Inside a group, every property is always written, as `null` when unknown (subject to `JsonSerializerOptions.DefaultIgnoreCondition`). The v1 fields stay at the root.
 
 Errors follow ASP.NET Core defaults:
 - `401` / `403` when authorization conventions apply;
@@ -120,11 +141,17 @@ Errors follow ASP.NET Core defaults:
 | `Owner` | string | core (`WithOwner`) | `WithOwner(owner)` | Left out unless `WithOwner` is called. Always a string: further owner details, if ever added, go in separate keys |
 | *custom* | any JSON-serializable value | core (`WithProperty`) | user value or factory | |
 | `ConfigurationsFiles` | string[] | Configuration | File-based configuration providers | Absolute physical paths, in load order |
-| `ApplicationProcessUptime` | string (TimeSpan constant format `[d.]hh:mm:ss[.fffffff]`) | Environment | now − process start time | Computed per request with the registered `TimeProvider` (`TimeProvider.System` by default). Days and fractions are left out when zero; a clock behind the start time reports `00:00:00` |
+| `ApplicationProcessUptime` | string (TimeSpan constant format `[d.]hh:mm:ss[.fffffff]`) | Environment | now − process start time | Computed per request with the registered `TimeProvider` (`TimeProvider.System` by default). Days and fractions are left out when zero; a clock behind the start time reports `00:00:00`. If the platform doesn't expose the start time, it counts from the first time it was needed |
+| `ProcessId` | number | Environment | `System.Environment.ProcessId` | |
+| `ProcessStartTime` | string \| null | Environment | `Process.StartTime`, converted to UTC | Preformatted string in the round-trip format (`"O"`) in UTC: always 7 fraction digits and `Z`, e.g. `"2026-10-20T08:00:00.1234567Z"`, unaffected by custom JSON converters. `null` when the platform doesn't expose it (never the fallback used for the uptime) |
 | `HostName` | string | Environment | `System.Environment.MachineName` | |
 | `ContentRootPath` | string | Environment | `IHostEnvironment.ContentRootPath` | |
 | `AssemblyLocation` | string \| null | Environment | Entry assembly `Location` | `null` when there is none, for example in a single-file app |
 | `ConnectionStrings` | object (name → masked string) | ConnectionStrings | `ConnectionStrings` configuration section | See §5 |
+| `Build` | object | Build | See §7 | `InformationalVersion`, `Commit`, `Branch`, `BuildId`: each string \| null |
+| `Runtime` | object | Runtime | `RuntimeInformation` | `Framework` (`FrameworkDescription`, e.g. `".NET 10.0.0"`), `RuntimeIdentifier` (e.g. `"linux-x64"`), `OSDescription`, `OSArchitecture` and `ProcessArchitecture` (enum names, e.g. `"X64"`, `"Arm64"`). All strings, computed once |
+| `Container` | object | Container | See §8 | `IsContainer` and `IsKubernetes`: bool; `PodName`, `Namespace`, `NodeName`: string \| null |
+| `Urls` | string[] \| null | Server | `IServerAddressesFeature.Addresses` of the registered `IServer` | Read per request, so the server has started and the addresses are final. As reported by the server, e.g. `"http://[::]:8080"`. An empty feature gives `[]` (`TestServer` has one); `null` only when there is no `IServer` or the server has no addresses feature |
 
 ### 4.3 Ordering and key rules
 
@@ -140,7 +167,7 @@ Errors follow ASP.NET Core defaults:
 - Keys of nested dictionaries are user data (for example connection string names) and are emitted as-is. `JsonSerializerOptions.DictionaryKeyPolicy` can still be set to convert them.
 - For full control, `AppInfoOptions.JsonSerializerOptions` can be modified directly; it applies to values, not to root keys. Default: indented output.
 
-### 4.5 Example response (all v1 packages)
+### 4.5 Example response (all packages)
 
 ```json
 {
@@ -153,12 +180,37 @@ Errors follow ASP.NET Core defaults:
     "/opt/app-root/appsettings.Stage.json"
   ],
   "ApplicationProcessUptime": "10.09:34:52.5222809",
-  "HostName": "apps-host-01",
+  "ProcessId": 1,
+  "ProcessStartTime": "2026-10-10T08:12:03.4512345Z",
+  "HostName": "billing-api-7f9c6d5b4-x2kqp",
   "ContentRootPath": "/opt/app-root",
   "AssemblyLocation": "/opt/app-root/Company.Billing.Api.dll",
   "ConnectionStrings": {
     "Billing": "Data Source=db.company.com;Initial Catalog=Billing;User ID=***;Password=***"
   },
+  "Build": {
+    "InformationalVersion": "1.0.5+a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+    "Commit": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+    "Branch": "main",
+    "BuildId": "1234"
+  },
+  "Runtime": {
+    "Framework": ".NET 10.0.0",
+    "RuntimeIdentifier": "linux-x64",
+    "OSDescription": "Ubuntu 24.04.1 LTS",
+    "OSArchitecture": "X64",
+    "ProcessArchitecture": "X64"
+  },
+  "Container": {
+    "IsContainer": true,
+    "IsKubernetes": true,
+    "PodName": "billing-api-7f9c6d5b4-x2kqp",
+    "Namespace": "stage",
+    "NodeName": "aks-node-3"
+  },
+  "Urls": [
+    "http://[::]:8080"
+  ],
   "Owner": "red_team@company.com",
   "Team": "red"
 }
@@ -199,16 +251,52 @@ Connection string names are user data and are emitted as-is, regardless of `KeyN
 - By default, optional files that don't exist are left out. `ConfigurationDetailsOptions.IncludeMissingOptionalFiles = true` includes them. Required files are always listed, even if deleted after startup.
 - The list is computed on every request. If `IConfiguration` is not an `IConfigurationRoot`, the list is empty.
 
-## 7. Security considerations
+## 7. Build details
+
+`WithBuildDetails` writes `Build` with four properties. Each is resolved from the first source that has a non-empty value; whitespace around values is trimmed.
+
+| Property | 1. Configuration | 2. Entry assembly | 3. Fallback | 4. Environment variables (defaults) |
+| --- | --- | --- | --- | --- |
+| `InformationalVersion` | – | `AssemblyInformationalVersionAttribute` | – | – |
+| `Commit` | `Build:Commit` | `[AssemblyMetadata("Commit", ...)]` | From `InformationalVersion`: take everything after the first `+`, split it on `.`, and use the last segment when it consists solely of 7–64 hex digits. This covers `1.0.5+<sha>` and `1.0.5+meta.<sha>` (the SDK appends the git commit when it can find the repository, after a `.` if the version already has metadata), and SHA-256 repositories | `GIT_COMMIT`, `GITHUB_SHA`, `CI_COMMIT_SHA`, `BUILD_SOURCEVERSION` |
+| `Branch` | `Build:Branch` | `[AssemblyMetadata("Branch", ...)]` | – | `GIT_BRANCH`, `GITHUB_REF_NAME`, `CI_COMMIT_REF_NAME`, `BUILD_SOURCEBRANCHNAME` |
+| `BuildId` | `Build:BuildId` | `[AssemblyMetadata("BuildId", ...)]` | – | `BUILD_ID`, `GITHUB_RUN_ID`, `CI_PIPELINE_ID`, `BUILD_BUILDID` |
+
+- Configuration comes first so a deployment can override what the binary says, for example with the environment variable `Build__Commit`. The section name is `BuildDetailsOptions.ConfigurationSection` (default `Build`).
+- CI variables such as `GITHUB_SHA` exist while the CI job runs, not on the host that runs the app. The reliable source is the binary: stamp `AssemblyMetadata` at build time (`<AssemblyMetadata Include="Commit" Value="$(GITHUB_SHA)" />`). The environment variables are a last resort for deployments that pass them through. The lists are `BuildDetailsOptions.CommitEnvironmentVariables`, `BranchEnvironmentVariables` and `BuildIdEnvironmentVariables`, checked in order; blank entries are ignored.
+- Only these named configuration keys and environment variables are read, never a whole section, so nothing else from configuration can leak.
+- Assembly values are read once. Configuration and environment variables are read on every request.
+
+## 8. Container detection
+
+`WithContainerDetails` writes `Container`. Values are read once, on the first request.
+
+| Property | Rule |
+| --- | --- |
+| `IsKubernetes` | The environment variable `KUBERNETES_SERVICE_HOST` is non-empty (Kubernetes injects it into every pod) |
+| `IsContainer` | `IsKubernetes`, or `DOTNET_RUNNING_IN_CONTAINER` equals `true` ignoring case (set by the official .NET container images, Linux and Windows), or, on non-Windows only, `/.dockerenv` (Docker) or `/run/.containerenv` (Podman) exists |
+| `PodName` | The environment variable named by `ContainerDetailsOptions.PodNameVariable` (default `POD_NAME`); in Kubernetes otherwise `HOSTNAME`, which Kubernetes sets to the pod name (but to the node name for `hostNetwork: true` pods, and to `spec.hostname` when that is set: use the Downward API variable for an exact value); else `null` |
+| `Namespace` | The environment variable named by `NamespaceVariable` (default `POD_NAMESPACE`); in Kubernetes otherwise the trimmed contents of `/var/run/secrets/kubernetes.io/serviceaccount/namespace`; else `null` |
+| `NodeName` | The environment variable named by `NodeNameVariable` (default `NODE_NAME`), else `null`. Kubernetes doesn't set it: expose it through the Downward API (`fieldRef: spec.nodeName`) |
+
+- Environment variable values are trimmed; empty values count as unset.
+- Detection never fails the request: a file that can't be read counts as missing. Only the `namespace` file is read, never the service account token next to it.
+- cgroup parsing and calls to the Kubernetes API are out of scope: they are fragile and need permissions.
+
+## 9. Security considerations
 
 - `/appinfo` exposes internal details: file paths, host names and infrastructure addresses. **It is open by default**, and the application owner must protect it, for example with `.RequireAuthorization()`, `.RequireHost()` or network policies.
 - The core package never emits secrets on its own. Only explicitly enabled packages add potentially sensitive data, and `Dut00.AppInfo.ConnectionStrings` always masks.
 - Custom properties (`WithProperty`) are emitted as-is. Their content is the user's responsibility.
+- `Urls`, `Container` and `Runtime` reveal ports, pod and node names and exact versions, which helps an attacker map the infrastructure: one more reason to protect the endpoint.
+- `Build` reads only the configuration keys and environment variables named in §7, plus any variables the user adds to the `*EnvironmentVariables` lists.
+- `Container` reads only the environment variables and files named in §8.
 - No caching is applied. Responses reflect the state at request time.
 
-## 8. Non-goals (v1)
+## 10. Non-goals
 
 - Health status or liveness semantics. Use ASP.NET Core Health Checks for that.
 - An HTML UI. The endpoint is JSON only.
 - Writing or changing configuration.
-- (After v1: CI and a tag-triggered workflow that publishes releases to nuget.org were added; see the README.)
+- Querying external systems (the Kubernetes API, cloud metadata endpoints, git) at request time.
+- (After v1: CI and a tag-triggered workflow that publishes releases to nuget.org were added; see the README. v0.2 adds the Build, Runtime, Container and Server packages and the process fields.)
