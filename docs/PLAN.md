@@ -73,7 +73,7 @@ Depends only on `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
 - `AppInfoContext` exposes `IServiceProvider Services`, `HttpContext HttpContext` and `void Set(string key, object? value)`. It is backed by a list plus a key index, so keys keep the order in which they were first set. If two contributors write the same key, the later one wins and a warning is logged.
 - `IAppInfoBuilder { IServiceCollection Services; }`, implemented by `AppInfoBuilder`
 - `AppInfoOptions`:
-  - `JsonSerializerOptions JsonSerializerOptions`. Defaults: `WriteIndented = true`, `PropertyNamingPolicy = null`, `DictionaryKeyPolicy = null` (PascalCase). It applies to values, not to root keys.
+  - `JsonSerializerOptions JsonSerializerOptions`. Defaults: `WriteIndented = true`, `PropertyNamingPolicy = null`, `DictionaryKeyPolicy = null` (PascalCase), `Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping` (readable `+`, `<`, non-ASCII; added in v0.2). It applies to values, not to root keys.
   - `JsonNamingPolicy? KeyNamingPolicy` converts root keys (applied when building the `JsonObject`) and sets `JsonSerializerOptions.PropertyNamingPolicy` for nested object properties. Nested dictionary keys (for example connection string names) stay as-is.
 - `AddAppInfo(this IServiceCollection, Action<AppInfoOptions>? configure = null)` registers the options and `CoreAppInfoContributor` (via `TryAddEnumerable`) and returns the builder.
 - `CoreAppInfoContributor` writes:

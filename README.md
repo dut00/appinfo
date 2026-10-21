@@ -103,6 +103,7 @@ app.Run();
 
 - Keys appear in registration order: the core fields first, then each `With*` call in the order it was made. If two sources set the same key, the later one wins and a warning is logged.
 - Keys are PascalCase by default. `AddAppInfo(o => o.KeyNamingPolicy = JsonNamingPolicy.CamelCase)` changes the key format (any `JsonNamingPolicy` works). `o.JsonSerializerOptions` controls how values are serialized.
+- Characters such as `+`, `<`, `'` and non-ASCII letters are written as-is (`"1.0.5+a1b2c3d"`, not `"1.0.5\u002Ba1b2c3d"`), because the response is JSON for people and tools, not HTML. For the strict escaping, set `o.JsonSerializerOptions.Encoder = JavaScriptEncoder.Default`.
 - `MapAppInfo` can be called more than once with different patterns.
 
 ## Security
@@ -124,6 +125,7 @@ app.MapAppInfo().RequireHost("*:8081");
 
 - The core package never emits secrets on its own. Values you pass to `WithProperty` are written as-is.
 - `Dut00.AppInfo.ConnectionStrings` always masks, and masking **fails closed**: a value it can't fully understand (URI-style, unparseable, Redis-style, split ODBC braces) is replaced completely with the mask (`***` by default). See the [package README](src/Dut00.AppInfo.ConnectionStrings/README.md) for the rules and known limitations. Masking reduces risk; it doesn't make the endpoint safe to expose publicly.
+- The JSON doesn't escape HTML-sensitive characters such as `<` (see the API notes above). A dashboard that embeds the body in HTML must encode it like any untrusted text.
 
 ## Custom contributors
 

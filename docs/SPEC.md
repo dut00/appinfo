@@ -165,7 +165,14 @@ Errors follow ASP.NET Core defaults:
 - Keys of nested dictionaries are user data (for example connection string names) and are emitted as-is. `JsonSerializerOptions.DictionaryKeyPolicy` can still be set to convert them.
 - For full control, `AppInfoOptions.JsonSerializerOptions` can be modified directly; it applies to values, not to root keys. Default: indented output.
 
-### 4.5 Example response (all packages)
+### 4.5 Escaping
+
+- The default `JsonSerializerOptions.Encoder` is `JavaScriptEncoder.UnsafeRelaxedJsonEscaping`, so characters such as `+`, `<`, `>`, `&`, `'` and non-ASCII letters are written as-is (`"1.0.5+a1b2c3d"`, not `"1.0.5\u002Ba1b2c3d"`). Quotes, backslashes and control characters are still escaped, so the body is always valid JSON.
+- "Unsafe" refers to embedding the text in HTML or JavaScript without further encoding. The endpoint answers `application/json` for people and tools, so readability wins. Setting `Encoder = JavaScriptEncoder.Default` restores the strict escaping.
+- Escaping is a property of the whole response (root keys, values, nested objects and dictionaries), not of one package.
+- Replacing `AppInfoOptions.JsonSerializerOptions` with a new instance discards the defaults (indentation and the relaxed encoder); modify it in place or set them again.
+
+### 4.6 Example response (all packages)
 
 ```json
 {
@@ -292,6 +299,7 @@ Connection string names are user data and are emitted as-is, regardless of `KeyN
 - `Build` reads only the configuration keys and environment variables named in §7, plus any variables the user adds to the `*EnvironmentVariables` lists.
 - `Container` reads only the environment variables and files named in §8.
 - No caching is applied. Responses reflect the state at request time.
+- Values may contain arbitrary text (custom properties, configuration, connection string names), and HTML-sensitive characters such as `<` are not escaped (§4.5). A tool that embeds the body in HTML must encode it like any untrusted text.
 
 ## 10. Non-goals
 

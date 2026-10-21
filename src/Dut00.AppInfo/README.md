@@ -41,6 +41,8 @@ To write a constant `null`, cast it: `WithProperty("Key", (object?)null)`. A pla
 
 Keys appear in registration order. Use `o.KeyNamingPolicy = JsonNamingPolicy.CamelCase` (or any `JsonNamingPolicy`) to change the key format; `o.JsonSerializerOptions` gives full control over value serialization.
 
+Characters such as `+`, `<`, `'` and non-ASCII letters are written as-is (`"1.0.5+a1b2c3d"`, not `"1.0.5\u002Ba1b2c3d"`). For the strict escaping of System.Text.Json, set `o.JsonSerializerOptions.Encoder = JavaScriptEncoder.Default`.
+
 More fields come from the extension packages: `Dut00.AppInfo.Configuration`, `Dut00.AppInfo.Environment` and `Dut00.AppInfo.ConnectionStrings`.
 
 ## Custom contributors
