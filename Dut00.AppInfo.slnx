@@ -10,6 +10,7 @@
     <Project Path="src/Dut00.AppInfo.Environment/Dut00.AppInfo.Environment.csproj" />
     <Project Path="src/Dut00.AppInfo.Runtime/Dut00.AppInfo.Runtime.csproj" />
     <Project Path="src/Dut00.AppInfo/Dut00.AppInfo.csproj" />
+    <Project Path="src/Dut00.AppInfo.Server/Dut00.AppInfo.Server.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Dut00.AppInfo.Build.Tests/Dut00.AppInfo.Build.Tests.csproj" />
@@ -18,6 +19,7 @@
     <Project Path="test/Dut00.AppInfo.Container.Tests/Dut00.AppInfo.Container.Tests.csproj" />
     <Project Path="test/Dut00.AppInfo.Environment.Tests/Dut00.AppInfo.Environment.Tests.csproj" />
     <Project Path="test/Dut00.AppInfo.Runtime.Tests/Dut00.AppInfo.Runtime.Tests.csproj" />
+    <Project Path="test/Dut00.AppInfo.Server.Tests/Dut00.AppInfo.Server.Tests.csproj" />
     <Project Path="test/Dut00.AppInfo.Tests/Dut00.AppInfo.Tests.csproj" />
   </Folder>
 </Solution>

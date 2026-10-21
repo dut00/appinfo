@@ -1,6 +1,6 @@
 # Dut00.AppInfo – Specification
 
-Version: 0.2 (draft) · Status: v1 implemented; v0.2: the `Process` group, Runtime, Build and Container are implemented, Server is planned (PLAN.md steps 17–18)
+Version: 0.2 (draft) · Status: v1 implemented; v0.2: the `Process` group, Runtime, Build, Container and Server are implemented; documentation and release prep remain (PLAN.md step 18)
 
 This document defines **what** Dut00.AppInfo does: public API, response contract and behavior.
 **How** it is built is described in [PLAN.md](PLAN.md). The original notes are in [draft.md](draft.md).

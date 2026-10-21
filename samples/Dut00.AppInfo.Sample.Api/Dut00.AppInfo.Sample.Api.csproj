@@ -21,6 +21,7 @@
     <ProjectReference Include="..\..\src\Dut00.AppInfo.Container\Dut00.AppInfo.Container.csproj" />
     <ProjectReference Include="..\..\src\Dut00.AppInfo.Environment\Dut00.AppInfo.Environment.csproj" />
     <ProjectReference Include="..\..\src\Dut00.AppInfo.Runtime\Dut00.AppInfo.Runtime.csproj" />
+    <ProjectReference Include="..\..\src\Dut00.AppInfo.Server\Dut00.AppInfo.Server.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseLocalPackages)' == 'true'">
@@ -31,6 +32,7 @@
     <PackageReference Include="Dut00.AppInfo.Container" />
     <PackageReference Include="Dut00.AppInfo.Environment" />
     <PackageReference Include="Dut00.AppInfo.Runtime" />
+    <PackageReference Include="Dut00.AppInfo.Server" />
   </ItemGroup>
 
 </Project>

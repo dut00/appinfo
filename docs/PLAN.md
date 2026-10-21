@@ -1,7 +1,7 @@
 # Plan: Dut00.AppInfo – NuGet package family exposing an `/appinfo` endpoint
 
 ## Context
-Status: **steps 1–11 are implemented** (v1, released as `0.1.0-preview.*`). **v0.2: steps 12–16 are done, steps 17–18 are planned**: four new packages (Build, Runtime, Container, Server) and the `Process` group in Environment. The repo started with only `draft.md` (Polish notes). Goal: a family of NuGet packages, structured like Xabaril/AspNetCore.Diagnostics.HealthChecks, that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the application (name, version, environment, owner, …) and can be extended through separate packages.
+Status: **steps 1–11 are implemented** (v1, released as `0.1.0-preview.*`). **v0.2: steps 12–17 are done, step 18 is planned**: four new packages (Build, Runtime, Container, Server) and the `Process` group in Environment. The repo started with only `draft.md` (Polish notes). Goal: a family of NuGet packages, structured like Xabaril/AspNetCore.Diagnostics.HealthChecks, that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the application (name, version, environment, owner, …) and can be extended through separate packages.
 
 **All code, comments, XML docs, READMEs and this plan are written in English.**
 
@@ -120,7 +120,7 @@ The contract (field names, sources, precedence, `null` rules) is in SPEC §2, §
 - **Build** (`WithBuildDetails`): `BuildDetailsOptions { ConfigurationSection = "Build", CommitEnvironmentVariables, BranchEnvironmentVariables, BuildIdEnvironmentVariables }`. Entry assembly attributes come from an internal `BuildAssemblyInfo(string? InformationalVersion, IReadOnlyDictionary<string, string> Metadata)` seam whose `Current` is read once; configuration and environment variables per request. The commit fallback parses the `+` suffix of `InformationalVersion`. The package README shows how to stamp `AssemblyMetadata` from CI (GitHub Actions, Azure DevOps, GitLab).
 - **Runtime** (`WithRuntimeDetails`): one static value built from `RuntimeInformation` once. All record properties are `string`; architectures are stored as `Architecture.ToString()`, because System.Text.Json writes enums as numbers and a user's `JsonStringEnumConverter` could change their casing.
 - **Container** (`WithContainerDetails`): `ContainerDetailsOptions { PodNameVariable = "POD_NAME", NamespaceVariable = "POD_NAMESPACE", NodeNameVariable = "NODE_NAME" }`. The result is computed once per contributor instance (singleton) on the first request, thread-safely (`Lazy<T>`). File reads catch I/O and access exceptions.
-- **Server** (`WithServerAddresses`): resolves `IServer` from the request services (optional), reads `Features.Get<IServerAddressesFeature>()?.Addresses` per request and copies it to an array.
+- **Server** (`WithServerAddresses`): resolves `IServer` (optional, a host singleton) once when the contributor is created, reads `Features.Get<IServerAddressesFeature>()?.Addresses` per request and copies it to an array by enumerating (Kestrel snapshots under a lock while enumerating; `Count` + `CopyTo` could race with a rebind after a configuration reload).
 
 ## Sample: `samples/Dut00.AppInfo.Sample.Api`
 - `Program.cs` follows the draft: `AddAppInfo().WithConfigurationDetails().WithEnvironmentDetails().WithConnectionStrings().WithOwner(...).WithProperty("Team", "red")`, then `app.MapAppInfo()`.

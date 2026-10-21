@@ -5,6 +5,7 @@ using Dut00.AppInfo.ConnectionStrings;
 using Dut00.AppInfo.Container;
 using Dut00.AppInfo.Environment;
 using Dut00.AppInfo.Runtime;
+using Dut00.AppInfo.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,6 +16,7 @@ builder.Services.AddAppInfo()
     .WithRuntimeDetails()
     .WithBuildDetails()
     .WithContainerDetails()
+    .WithServerAddresses()
     .WithOwner("red_team@company.com")
     .WithProperty("AssetId", "AST-008821")
     .WithProperty("Team", "red");
