@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Dut00.AppInfo.Container\Dut00.AppInfo.Container.csproj" />
+  </ItemGroup>
+
+</Project>

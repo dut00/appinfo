@@ -1,7 +1,7 @@
 # Plan: Dut00.AppInfo – NuGet package family exposing an `/appinfo` endpoint
 
 ## Context
-Status: **steps 1–11 are implemented** (v1, released as `0.1.0-preview.*`). **v0.2: steps 12–15 are done, steps 16–18 are planned**: four new packages (Build, Runtime, Container, Server) and the `Process` group in Environment. The repo started with only `draft.md` (Polish notes). Goal: a family of NuGet packages, structured like Xabaril/AspNetCore.Diagnostics.HealthChecks, that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the application (name, version, environment, owner, …) and can be extended through separate packages.
+Status: **steps 1–11 are implemented** (v1, released as `0.1.0-preview.*`). **v0.2: steps 12–16 are done, steps 17–18 are planned**: four new packages (Build, Runtime, Container, Server) and the `Process` group in Environment. The repo started with only `draft.md` (Polish notes). Goal: a family of NuGet packages, structured like Xabaril/AspNetCore.Diagnostics.HealthChecks, that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the application (name, version, environment, owner, …) and can be extended through separate packages.
 
 **All code, comments, XML docs, READMEs and this plan are written in English.**
 

@@ -11,6 +11,7 @@
     <PackageVersion Include="Dut00.AppInfo.Build" Version="$(AppInfoPackageVersion)" />
     <PackageVersion Include="Dut00.AppInfo.Configuration" Version="$(AppInfoPackageVersion)" />
     <PackageVersion Include="Dut00.AppInfo.ConnectionStrings" Version="$(AppInfoPackageVersion)" />
+    <PackageVersion Include="Dut00.AppInfo.Container" Version="$(AppInfoPackageVersion)" />
     <PackageVersion Include="Dut00.AppInfo.Environment" Version="$(AppInfoPackageVersion)" />
     <PackageVersion Include="Dut00.AppInfo.Runtime" Version="$(AppInfoPackageVersion)" />
   </ItemGroup>
