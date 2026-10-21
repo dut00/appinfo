@@ -12,6 +12,7 @@
     <ProjectReference Include="..\..\src\Dut00.AppInfo.Configuration\Dut00.AppInfo.Configuration.csproj" />
     <ProjectReference Include="..\..\src\Dut00.AppInfo.ConnectionStrings\Dut00.AppInfo.ConnectionStrings.csproj" />
     <ProjectReference Include="..\..\src\Dut00.AppInfo.Environment\Dut00.AppInfo.Environment.csproj" />
+    <ProjectReference Include="..\..\src\Dut00.AppInfo.Runtime\Dut00.AppInfo.Runtime.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition="'$(UseLocalPackages)' == 'true'">
@@ -19,6 +20,7 @@
     <PackageReference Include="Dut00.AppInfo.Configuration" />
     <PackageReference Include="Dut00.AppInfo.ConnectionStrings" />
     <PackageReference Include="Dut00.AppInfo.Environment" />
+    <PackageReference Include="Dut00.AppInfo.Runtime" />
   </ItemGroup>
 
 </Project>

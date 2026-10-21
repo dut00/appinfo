@@ -6,12 +6,14 @@
     <Project Path="src/Dut00.AppInfo.Configuration/Dut00.AppInfo.Configuration.csproj" />
     <Project Path="src/Dut00.AppInfo.ConnectionStrings/Dut00.AppInfo.ConnectionStrings.csproj" />
     <Project Path="src/Dut00.AppInfo.Environment/Dut00.AppInfo.Environment.csproj" />
+    <Project Path="src/Dut00.AppInfo.Runtime/Dut00.AppInfo.Runtime.csproj" />
     <Project Path="src/Dut00.AppInfo/Dut00.AppInfo.csproj" />
   </Folder>
   <Folder Name="/test/">
     <Project Path="test/Dut00.AppInfo.Configuration.Tests/Dut00.AppInfo.Configuration.Tests.csproj" />
     <Project Path="test/Dut00.AppInfo.ConnectionStrings.Tests/Dut00.AppInfo.ConnectionStrings.Tests.csproj" />
     <Project Path="test/Dut00.AppInfo.Environment.Tests/Dut00.AppInfo.Environment.Tests.csproj" />
+    <Project Path="test/Dut00.AppInfo.Runtime.Tests/Dut00.AppInfo.Runtime.Tests.csproj" />
     <Project Path="test/Dut00.AppInfo.Tests/Dut00.AppInfo.Tests.csproj" />
   </Folder>
 </Solution>
