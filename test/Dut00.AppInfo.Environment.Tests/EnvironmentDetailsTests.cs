@@ -11,7 +11,8 @@ namespace Dut00.AppInfo.Environment.Tests;
 
 public sealed class EnvironmentDetailsTests
 {
-    private static readonly DateTimeOffset StartedAt = new(2026, 1, 1, 8, 0, 0, TimeSpan.Zero);
+    // Tests control the uptime through the clock, relative to the real start time of the test process.
+    private static readonly DateTimeOffset StartedAt = EnvironmentAppInfoContributor.ProcessStartTime!.Value;
 
     [Fact]
     public async Task WithEnvironmentDetails_AddsFourKeysAfterCoreFields()
@@ -23,8 +24,64 @@ public sealed class EnvironmentDetailsTests
         json.PropertyNames().ShouldBe(
         [
             "ApplicationName", "Version", "Environment", "IsProduction",
-            "ApplicationProcessUptime", "HostName", "ContentRootPath", "AssemblyLocation",
+            "Process", "HostName", "ContentRootPath", "AssemblyLocation",
         ]);
+    }
+
+    [Fact]
+    public async Task Process_HasIdStartTimeAndUptimeInThatOrder()
+    {
+        await using var app = await TestApp.StartAsync(b => b.Services.AddAppInfo().WithEnvironmentDetails());
+
+        var json = await app.GetAppInfoAsync();
+
+        json.GetProperty("Process").PropertyNames().ShouldBe(["Id", "StartTime", "Uptime"]);
+    }
+
+    [Fact]
+    public async Task ProcessId_IsTheCurrentProcessId()
+    {
+        await using var app = await TestApp.StartAsync(b => b.Services.AddAppInfo().WithEnvironmentDetails());
+
+        var json = await app.GetAppInfoAsync();
+
+        json.GetProperty("Process").GetProperty("Id").GetInt32().ShouldBe(System.Environment.ProcessId);
+    }
+
+    [Fact]
+    public void CreateProcessDetails_FormatsStartTimeInRoundTripUtcFormat()
+    {
+        var startTime = new DateTimeOffset(2026, 1, 1, 10, 0, 0, TimeSpan.FromHours(2));
+
+        var details = EnvironmentAppInfoContributor.CreateProcessDetails(startTime, startTime + TimeSpan.FromMinutes(5));
+
+        // Converted to UTC, with all seven fraction digits even when they are zero.
+        details.StartTime.ShouldBe("2026-01-01T08:00:00.0000000Z");
+        details.Uptime.ShouldBe("00:05:00");
+        details.Id.ShouldBe(System.Environment.ProcessId);
+    }
+
+    [Fact]
+    public void CreateProcessDetails_WithoutStartTime_LeavesStartTimeAndUptimeNull()
+    {
+        var details = EnvironmentAppInfoContributor.CreateProcessDetails(null, DateTimeOffset.UtcNow);
+
+        details.StartTime.ShouldBeNull();
+        details.Uptime.ShouldBeNull();
+        details.Id.ShouldBe(System.Environment.ProcessId);
+    }
+
+    [Fact]
+    public async Task ProcessStartTime_WithRealProcess_IsTheStartTimeInUtc()
+    {
+        await using var app = await TestApp.StartAsync(b => b.Services.AddAppInfo().WithEnvironmentDetails());
+
+        var json = await app.GetAppInfoAsync();
+
+        var value = json.GetProperty("Process").GetProperty("StartTime").GetString();
+        value.ShouldNotBeNull();
+        value.ShouldEndWith("Z");
+        DateTimeOffset.Parse(value, CultureInfo.InvariantCulture, DateTimeStyles.RoundtripKind).ShouldBe(StartedAt);
     }
 
     [Fact]
@@ -78,15 +135,14 @@ public sealed class EnvironmentDetailsTests
         await using var app = await TestApp.StartAsync(b =>
         {
             b.Services.AddSingleton<TimeProvider>(time);
-            b.Services.AddSingleton(new ProcessStartTime(StartedAt));
             b.Services.AddAppInfo().WithEnvironmentDetails();
         });
 
-        (await app.GetAppInfoAsync()).GetProperty("ApplicationProcessUptime").GetString().ShouldBe("1.02:03:04.5000000");
+        (await app.GetAppInfoAsync()).GetProperty("Process").GetProperty("Uptime").GetString().ShouldBe("1.02:03:04.5000000");
 
         time.Advance(TimeSpan.FromHours(1));
 
-        (await app.GetAppInfoAsync()).GetProperty("ApplicationProcessUptime").GetString().ShouldBe("1.03:03:04.5000000");
+        (await app.GetAppInfoAsync()).GetProperty("Process").GetProperty("Uptime").GetString().ShouldBe("1.03:03:04.5000000");
     }
 
     [Fact]
@@ -96,9 +152,9 @@ public sealed class EnvironmentDetailsTests
 
         var json = await app.GetAppInfoAsync();
 
-        var uptime = TimeSpan.ParseExact(json.GetProperty("ApplicationProcessUptime").GetString()!, "c", CultureInfo.InvariantCulture);
+        var uptime = TimeSpan.ParseExact(json.GetProperty("Process").GetProperty("Uptime").GetString()!, "c", CultureInfo.InvariantCulture);
         uptime.ShouldBeGreaterThan(TimeSpan.Zero);
-        uptime.ShouldBeLessThan(DateTimeOffset.UtcNow - ProcessStartTime.Current.Value + TimeSpan.FromSeconds(1));
+        uptime.ShouldBeLessThan(DateTimeOffset.UtcNow - StartedAt + TimeSpan.FromSeconds(1));
     }
 
     [Theory]
@@ -112,12 +168,13 @@ public sealed class EnvironmentDetailsTests
     }
 
     [Fact]
-    public void ProcessStartTime_Current_IsInThePastAndInUtc()
+    public void ProcessStartTime_IsKnownInThePastAndInUtc()
     {
-        var startedAt = ProcessStartTime.Current.Value;
+        var startedAt = EnvironmentAppInfoContributor.ProcessStartTime;
 
-        startedAt.Offset.ShouldBe(TimeSpan.Zero);
-        startedAt.ShouldBeLessThanOrEqualTo(DateTimeOffset.UtcNow);
+        startedAt.ShouldNotBeNull(); // Windows, Linux and macOS all expose it.
+        startedAt.Value.Offset.ShouldBe(TimeSpan.Zero);
+        startedAt.Value.ShouldBeLessThanOrEqualTo(DateTimeOffset.UtcNow);
     }
 
     [Fact]
@@ -128,10 +185,9 @@ public sealed class EnvironmentDetailsTests
         {
             b.Services.AddAppInfo().WithEnvironmentDetails();
             b.Services.TryAddSingleton<TimeProvider>(time);
-            b.Services.AddSingleton(new ProcessStartTime(StartedAt));
         });
 
-        (await app.GetAppInfoAsync()).GetProperty("ApplicationProcessUptime").GetString().ShouldBe("00:05:00");
+        (await app.GetAppInfoAsync()).GetProperty("Process").GetProperty("Uptime").GetString().ShouldBe("00:05:00");
     }
 
     [Fact]
@@ -146,7 +202,6 @@ public sealed class EnvironmentDetailsTests
         services.Count(d => d.ServiceType == typeof(IAppInfoContributor) && d.ImplementationType is null && d.ImplementationFactory is not null)
             .ShouldBe(1);
         services.ShouldNotContain(d => d.ServiceType == typeof(TimeProvider));
-        services.ShouldNotContain(d => d.ServiceType == typeof(ProcessStartTime));
     }
 
     [Fact]
@@ -164,7 +219,7 @@ public sealed class EnvironmentDetailsTests
 
         var json = await app.GetAppInfoAsync();
 
-        json.PropertyNames().ShouldContain("applicationProcessUptime");
         json.PropertyNames().ShouldContain("hostName");
+        json.GetProperty("process").PropertyNames().ShouldBe(["id", "startTime", "uptime"]);
     }
 }

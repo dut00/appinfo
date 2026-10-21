@@ -1,6 +1,6 @@
 # Dut00.AppInfo – Specification
 
-Version: 0.2 (draft) · Status: v1 implemented; the v0.2 additions (Build, Runtime, Container, Server, process fields) are planned, see PLAN.md steps 12–18
+Version: 0.2 (draft) · Status: v1 implemented; v0.2: the `Process` group is implemented, Build, Runtime, Container and Server are planned (PLAN.md steps 14–18)
 
 This document defines **what** Dut00.AppInfo does: public API, response contract and behavior.
 **How** it is built is described in [PLAN.md](PLAN.md). The original notes are in [draft.md](draft.md).
@@ -23,7 +23,7 @@ Typical questions it answers:
 | --- | --- | --- |
 | `Dut00.AppInfo` | `Microsoft.AspNetCore.App` (framework reference) | Endpoint, core fields, owner, custom properties, extensibility API |
 | `Dut00.AppInfo.Configuration` | `Dut00.AppInfo` | `ConfigurationsFiles` |
-| `Dut00.AppInfo.Environment` | `Dut00.AppInfo` | `ApplicationProcessUptime`, `ProcessId`, `ProcessStartTime`, `HostName`, `ContentRootPath`, `AssemblyLocation` |
+| `Dut00.AppInfo.Environment` | `Dut00.AppInfo` | `Process` (ID, start time, uptime), `HostName`, `ContentRootPath`, `AssemblyLocation` |
 | `Dut00.AppInfo.ConnectionStrings` | `Dut00.AppInfo` | `ConnectionStrings` (masked) |
 | `Dut00.AppInfo.Build` | `Dut00.AppInfo` | `Build`: informational version, commit, branch, build ID |
 | `Dut00.AppInfo.Runtime` | `Dut00.AppInfo` | `Runtime`: .NET runtime, runtime identifier, OS, architectures |
@@ -124,7 +124,7 @@ public sealed class AppInfoContext
 | Content-Type | `application/json; charset=utf-8` |
 | Body | A single JSON object (see the shape rule below) |
 
-Shape rule: a package that adds unrelated single values writes them as keys at the root (`HostName`, `Urls`). A package that adds a set of related values groups them under **one root key whose value is an object** (`Build`, `Runtime`, `Container`). Inside a group, every property is always written, as `null` when unknown (subject to `JsonSerializerOptions.DefaultIgnoreCondition`). The v1 fields stay at the root.
+Shape rule: a package that adds unrelated single values writes them as keys at the root (`HostName`, `Urls`). A package that adds a set of related values groups them under **one root key whose value is an object** (`Process`, `Build`, `Runtime`, `Container`). Inside a group, every property is always written, as `null` when unknown (subject to `JsonSerializerOptions.DefaultIgnoreCondition`).
 
 Errors follow ASP.NET Core defaults:
 - `401` / `403` when authorization conventions apply;
@@ -141,9 +141,7 @@ Errors follow ASP.NET Core defaults:
 | `Owner` | string | core (`WithOwner`) | `WithOwner(owner)` | Left out unless `WithOwner` is called. Always a string: further owner details, if ever added, go in separate keys |
 | *custom* | any JSON-serializable value | core (`WithProperty`) | user value or factory | |
 | `ConfigurationsFiles` | string[] | Configuration | File-based configuration providers | Absolute physical paths, in load order |
-| `ApplicationProcessUptime` | string (TimeSpan constant format `[d.]hh:mm:ss[.fffffff]`) | Environment | now − process start time | Computed per request with the registered `TimeProvider` (`TimeProvider.System` by default). Days and fractions are left out when zero; a clock behind the start time reports `00:00:00`. If the platform doesn't expose the start time, it counts from the first time it was needed |
-| `ProcessId` | number | Environment | `System.Environment.ProcessId` | |
-| `ProcessStartTime` | string \| null | Environment | `Process.StartTime`, converted to UTC | Preformatted string in the round-trip format (`"O"`) in UTC: always 7 fraction digits and `Z`, e.g. `"2026-10-20T08:00:00.1234567Z"`, unaffected by custom JSON converters. `null` when the platform doesn't expose it (never the fallback used for the uptime) |
+| `Process` | object | Environment | The current process | `Id` (number, `System.Environment.ProcessId`); `StartTime` (string \| null: `Process.StartTime` as a preformatted UTC string in the round-trip format `"O"`, always 7 fraction digits and `Z`, e.g. `"2026-10-20T08:00:00.1234567Z"`, unaffected by custom JSON converters; `null` when the platform doesn't expose it); `Uptime` (string \| null, TimeSpan constant format `[d.]hh:mm:ss[.fffffff]`: now − start time, computed per request with the registered `TimeProvider`, `TimeProvider.System` by default; days and fractions are left out when zero; a clock behind the start time reports `00:00:00`; `null` when the start time is unknown). Replaces the v1 root key `ApplicationProcessUptime` |
 | `HostName` | string | Environment | `System.Environment.MachineName` | |
 | `ContentRootPath` | string | Environment | `IHostEnvironment.ContentRootPath` | |
 | `AssemblyLocation` | string \| null | Environment | Entry assembly `Location` | `null` when there is none, for example in a single-file app |
@@ -179,9 +177,11 @@ Errors follow ASP.NET Core defaults:
     "/opt/app-root/appsettings.json",
     "/opt/app-root/appsettings.Stage.json"
   ],
-  "ApplicationProcessUptime": "10.09:34:52.5222809",
-  "ProcessId": 1,
-  "ProcessStartTime": "2026-10-10T08:12:03.4512345Z",
+  "Process": {
+    "Id": 1,
+    "StartTime": "2026-10-10T08:12:03.4512345Z",
+    "Uptime": "10.09:34:52.5222809"
+  },
   "HostName": "billing-api-7f9c6d5b4-x2kqp",
   "ContentRootPath": "/opt/app-root",
   "AssemblyLocation": "/opt/app-root/Company.Billing.Api.dll",
@@ -299,4 +299,4 @@ Connection string names are user data and are emitted as-is, regardless of `KeyN
 - An HTML UI. The endpoint is JSON only.
 - Writing or changing configuration.
 - Querying external systems (the Kubernetes API, cloud metadata endpoints, git) at request time.
-- (After v1: CI and a tag-triggered workflow that publishes releases to nuget.org were added; see the README. v0.2 adds the Build, Runtime, Container and Server packages and the process fields.)
+- (After v1: CI and a tag-triggered workflow that publishes releases to nuget.org were added; see the README. v0.2 adds the Build, Runtime, Container and Server packages and groups the process fields under `Process`.)

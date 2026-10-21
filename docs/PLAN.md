@@ -1,7 +1,7 @@
 # Plan: Dut00.AppInfo – NuGet package family exposing an `/appinfo` endpoint
 
 ## Context
-Status: **steps 1–11 are implemented** (v1, released as `0.1.0-preview.*`). **Steps 12–18 (v0.2) are planned**: four new packages (Build, Runtime, Container, Server) and process fields in Environment. The repo started with only `draft.md` (Polish notes). Goal: a family of NuGet packages, structured like Xabaril/AspNetCore.Diagnostics.HealthChecks, that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the application (name, version, environment, owner, …) and can be extended through separate packages.
+Status: **steps 1–11 are implemented** (v1, released as `0.1.0-preview.*`). **v0.2: steps 12–13 are done, steps 14–18 are planned**: four new packages (Build, Runtime, Container, Server) and the `Process` group in Environment. The repo started with only `draft.md` (Polish notes). Goal: a family of NuGet packages, structured like Xabaril/AspNetCore.Diagnostics.HealthChecks, that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the application (name, version, environment, owner, …) and can be extended through separate packages.
 
 **All code, comments, XML docs, READMEs and this plan are written in English.**
 
@@ -14,7 +14,7 @@ Agreed decisions:
 - Packages: core + separate extension packages. v1 ships **Configuration, Environment and ConnectionStrings (masked)**. v0.2 adds **Build, Runtime, Container and Server**, one package per topic, none with extra dependencies.
 - Architecture: contributors implementing `IAppInfoContributor`, registered in DI. API: `AddAppInfo()` returns `IAppInfoBuilder`, then `.WithXxx()`. Endpoint: `MapAppInfo(pattern = "/appinfo")`.
 - Core fields: ApplicationName, Version, Environment, IsProduction, plus `WithOwner` and custom fields (`WithProperty`)
-- JSON shape: single values sit at the root (all v1 fields, `Urls`); a package with a set of related values groups them under one object key (`Build`, `Runtime`, `Container`). Key casing is configurable, PascalCase by default, and applies to nested properties too.
+- JSON shape: single values sit at the root (`HostName`, `Urls`, ...); a set of related values is grouped under one object key (`Process`, `Build`, `Runtime`, `Container`). Key casing is configurable, PascalCase by default, and applies to nested properties too.
 - Security: `MapAppInfo` returns `IEndpointConventionBuilder`, so the user can chain `.RequireAuthorization()` etc. The README carries a warning.
 - Layout: `src/ test/ samples/`, `.slnx`, `Directory.Build.props`, Central Package Management
 - Tests: xUnit + Shouldly, unit and integration (TestServer)
@@ -94,13 +94,13 @@ Depends only on `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
 Namespaces match package names (`Dut00.AppInfo`, `Dut00.AppInfo.Environment`, …), and each package's extension methods live in its namespace, as in the draft (`using Dut00.AppInfo.Environment;`). Because that namespace collides with `System.Environment`, the Environment project must write `System.Environment` in full.
 
 ## Extensions
-Each extension is a separate csproj with a ProjectReference to core (packed as a NuGet dependency), one contributor class, one extension-method class, an options class where needed, and internal helpers (for example `ConnectionStringMasker`, `ProcessStartTime`).
+Each extension is a separate csproj with a ProjectReference to core (packed as a NuGet dependency), one contributor class, one extension-method class, an options class where needed, and internal helpers (for example `ConnectionStringMasker`).
 
 - **Dut00.AppInfo.Configuration**: `WithConfigurationDetails()` adds `ConfigurationsFiles: string[]`.
   - Source: `IConfiguration as IConfigurationRoot`, then `Providers.OfType<FileConfigurationProvider>()`; the path is the file's `PhysicalPath`, else `PhysicalFileProvider.Root` + path for a missing file, else `Source.Path`. `ChainedConfigurationProvider.Configuration` is searched too, once per root.
   - Missing optional files are left out by default; the `IncludeMissingOptionalFiles` option includes them. Required files are always listed.
 - **Dut00.AppInfo.Environment**: `WithEnvironmentDetails()` adds four keys:
-  - `ApplicationProcessUptime`: process start time to now, as a TimeSpan. Computed on each request with the app's `TimeProvider` if registered (the package registers none), otherwise `TimeProvider.System`, so tests can control it.
+  - `Process` (v0.2; replaced the v1 key `ApplicationProcessUptime`): `Id`, `StartTime` and `Uptime`, the process start time to now as a TimeSpan. The uptime is computed on each request with the app's `TimeProvider` if registered (the package registers none), otherwise `TimeProvider.System`, so tests can control it; it is `null` when the start time is unknown.
   - `HostName`: `System.Environment.MachineName`
   - `ContentRootPath`: from `IHostEnvironment`
   - `AssemblyLocation`: `Assembly.GetEntryAssembly()?.Location`, or `null` when empty (single-file apps)
@@ -114,9 +114,9 @@ Each extension is a separate csproj with a ProjectReference to core (packed as a
 The contract (field names, sources, precedence, `null` rules) is in SPEC §2, §4.2, §7 and §8. Implementation notes:
 
 - **Same skeleton as v1 extensions**: csproj with a ProjectReference to core, `<Name>AppInfoBuilderExtensions` in the package namespace, options class where needed, contributor and helpers in `Internal`, package `README.md`, a test project, a line in the slnx. Contributors are registered with `TryAddEnumerable` as singletons when they hold no per-request state.
-- **Groups are typed**: each group (`Build`, `Runtime`, `Container`) is an internal sealed record serialized by `System.Text.Json`, so property order is the declaration order and `KeyNamingPolicy` (via `PropertyNamingPolicy`) applies to nested names without extra code. Values that must keep an exact format are stored preformatted as strings. Consequence: apps that disable reflection-based serialization (trimmed/AOT with a source-generated-only resolver) can't serialize the groups; AOT isn't a goal.
-- **Testable host access**: environment variables, files, the process start time and the entry assembly's build attributes are read through small internal seams (like the existing `ProcessStartTime`: a record with a static `Current`, resolved as `GetService<T>() ?? T.Current`), which tests register to replace. Under Microsoft.Testing.Platform the entry assembly is the test project, so build attributes can't be varied any other way. Tests never set real environment variables, because tests run in parallel and share the process.
-- **Environment** (`WithEnvironmentDetails`): adds `ProcessId` and `ProcessStartTime` right after `ApplicationProcessUptime`. `ProcessStartTime` gains an "is known" flag, so the uptime fallback (first use) is never reported as the start time; `ProcessStartTime` is written as a string, `UtcDateTime.ToString("O", CultureInfo.InvariantCulture)` (System.Text.Json would trim fraction digits, and a `DateTimeOffset` would end in `+00:00`).
+- **Groups are typed**: each group (`Process`, `Build`, `Runtime`, `Container`) is an internal sealed record serialized by `System.Text.Json`, so property order is the declaration order and `KeyNamingPolicy` (via `PropertyNamingPolicy`) applies to nested names without extra code. Values that must keep an exact format are stored preformatted as strings. Consequence: apps that disable reflection-based serialization (trimmed/AOT with a source-generated-only resolver) can't serialize the groups; AOT isn't a goal.
+- **Testable host access**: environment variables, files and the entry assembly's build attributes are read through small internal seams (a record with a static `Current`, resolved as `GetService<T>() ?? T.Current`), used only where a test can't control the input otherwise, which tests register to replace. Under Microsoft.Testing.Platform the entry assembly is the test project, so build attributes can't be varied any other way. Tests never set real environment variables, because tests run in parallel and share the process.
+- **Environment** (`WithEnvironmentDetails`): replaces the root key `ApplicationProcessUptime` with the `Process` group (`Id`, `StartTime`, `Uptime`), first among its keys. The process start time is read once into a static `DateTimeOffset?` (null when the platform doesn't expose it, which makes both `StartTime` and `Uptime` null); the v1 `ProcessStartTime` DI seam and its first-use fallback are gone, because tests control the uptime through `FakeTimeProvider` relative to the real start time. `StartTime` is written as a string, `UtcDateTime.ToString("O", CultureInfo.InvariantCulture)` (System.Text.Json would trim fraction digits, and a `DateTimeOffset` would end in `+00:00`).
 - **Build** (`WithBuildDetails`): `BuildDetailsOptions { ConfigurationSection = "Build", CommitEnvironmentVariables, BranchEnvironmentVariables, BuildIdEnvironmentVariables }`. Entry assembly attributes come from an internal `BuildAssemblyInfo(string? InformationalVersion, IReadOnlyDictionary<string, string> Metadata)` seam whose `Current` is read once; configuration and environment variables per request. The commit fallback parses the `+` suffix of `InformationalVersion`. The package README shows how to stamp `AssemblyMetadata` from CI (GitHub Actions, Azure DevOps, GitLab).
 - **Runtime** (`WithRuntimeDetails`): one static value built from `RuntimeInformation` on first use. All record properties are `string`; architectures are stored as `Architecture.ToString()`, because System.Text.Json writes enums as numbers and a user's `JsonStringEnumConverter` could change their casing.
 - **Container** (`WithContainerDetails`): `ContainerDetailsOptions { PodNameVariable = "POD_NAME", NamespaceVariable = "POD_NAMESPACE", NodeNameVariable = "NODE_NAME" }`. The result is computed once per contributor instance (singleton) on the first request, thread-safely (`Lazy<T>`). File reads catch I/O and access exceptions.
@@ -142,7 +142,7 @@ The contract (field names, sources, precedence, `null` rules) is in SPEC §2, §
 - **Configuration**: JSON, XML and INI files in a temp directory; full paths in load order; missing optional files left out or included by option; chained configurations; non-physical providers.
 - **Environment**: fields are present with the right types; uptime is checked with a fake `TimeProvider`; HostName equals MachineName.
 - **ConnectionStrings**: masker unit tests (SQL Server, PostgreSQL, Azure, ODBC, Redis, URIs, unparseable values, custom keys) including a corpus of secret-bearing inputs from three adversarial reviews that must never appear in the output, plus integration tests.
-- **Environment (v0.2)**: `ProcessId` equals `System.Environment.ProcessId`; `ProcessStartTime` uses the fake start time, is UTC with a `Z` suffix, and is `null` when the start time is unknown while the uptime still works.
+- **Environment (v0.2)**: `Process` has `Id`, `StartTime`, `Uptime` in that order; `Id` equals `System.Environment.ProcessId`; `StartTime` equals the real process start time, is UTC with a `Z` suffix, and `StartTime` and `Uptime` are both `null` when the start time is unknown (unit-tested through `CreateProcessDetails`).
 - **Build**: every precedence level per property (configuration > assembly metadata > `+` suffix > environment variables), blank values skipped, custom section and variable lists, `+` suffix that isn't hex ignored, all `null` when nothing is found, camelCase nested names.
 - **Runtime**: the group has all five properties with the values from `RuntimeInformation`.
 - **Container**: each rule of SPEC §8 with fake environment variables and files (no container, Docker, Podman, official .NET image, Kubernetes with and without Downward API variables, unreadable namespace file), custom variable names.
@@ -167,8 +167,8 @@ After **every** step: run `dotnet build` and `dotnet test` (once tests exist), r
 Each package step includes: the package (csproj, API, options, contributor, package README), its test project in the slnx, the sample wired to it (`Program.cs`, the `ProjectReference`, plus the local-feed `PackageReference` and the version entry in `Directory.Packages.props`), and SPEC/PLAN corrections if the design changed on the way.
 
 12. **Design**: SPEC (contract for v0.2) and this plan. No code.
-13. **Environment process fields**: `ProcessId`, `ProcessStartTime` (with the unknown-start-time case), tests, README of the package.
-14. **Runtime package** (`Dut00.AppInfo.Runtime`): the simplest new package; it settles the typed-group pattern for the next ones.
+13. **Environment `Process` group**: `Id`, `StartTime` (`null` with `Uptime` when the start time is unknown) and `Uptime` (moved from `ApplicationProcessUptime`, a breaking change), tests, README of the package.
+14. **Runtime package** (`Dut00.AppInfo.Runtime`): the simplest new package; it follows the typed-group pattern set by `Process` in step 13.
 15. **Build package** (`Dut00.AppInfo.Build`): precedence rules, options, CI stamping examples in its README. Locally the commit comes from the SDK's `+<sha>` suffix; the sample also stamps `<AssemblyMetadata Include="BuildId" Value="local" />` to show the mechanism.
 16. **Container package** (`Dut00.AppInfo.Container`): detection rules with fake host access.
 17. **Server package** (`Dut00.AppInfo.Server`): `Urls`; check by hand with `dotnet run` that Kestrel reports the sample's address.
@@ -177,7 +177,7 @@ Each package step includes: the package (csproj, API, options, contributor, pack
 ## Verification
 1. `dotnet build -c Release` builds green for net8.0, net9.0 and net10.0. SDK 10 can build net9.0 without the net9 runtime.
 2. `dotnet test` passes on net8.0 and net10.0.
-3. `dotnet run --project samples/Dut00.AppInfo.Sample.Api`, then `curl http://localhost:5080/appinfo`: the JSON matches the draft and the password is masked. After v0.2 it also has `ProcessId`, `ProcessStartTime`, `Build` (stamped commit), `Runtime`, `Container` (`IsContainer: false` locally) and `Urls` with `http://localhost:5080`.
+3. `dotnet run --project samples/Dut00.AppInfo.Sample.Api`, then `curl http://localhost:5080/appinfo`: the JSON matches the draft and the password is masked. After v0.2 it has `Process` instead of `ApplicationProcessUptime`, and also `Build` (stamped commit), `Runtime`, `Container` (`IsContainer: false` locally) and `Urls` with `http://localhost:5080`.
 4. `pwsh ./build/pack.ps1` produces 4 `.nupkg` and 4 `.snupkg` files in `./artifacts` (8 + 8 after v0.2). Inspect them for lib/net8.0, net9.0 and net10.0, the README, and the dependency on Dut00.AppInfo.
 5. `dotnet run --project samples/Dut00.AppInfo.Sample.Api -p:UseLocalPackages=true`: the sample runs against the local-feed packages.
 

@@ -11,11 +11,14 @@ namespace Dut00.AppInfo.Environment;
 public static class EnvironmentAppInfoBuilderExtensions
 {
     /// <summary>
-    /// Adds <c>ApplicationProcessUptime</c>, <c>HostName</c>, <c>ContentRootPath</c> and <c>AssemblyLocation</c>.
+    /// Adds <c>Process</c> (<c>Id</c>, <c>StartTime</c>, <c>Uptime</c>), <c>HostName</c>, <c>ContentRootPath</c> and
+    /// <c>AssemblyLocation</c>.
     /// </summary>
     /// <remarks>
-    /// The uptime is computed on every request with the application's <see cref="TimeProvider"/> if one is registered,
+    /// <c>Process.Uptime</c> is computed on every request with the application's <see cref="TimeProvider"/> if one is registered,
     /// otherwise with <see cref="TimeProvider.System"/>. This method registers no <see cref="TimeProvider"/> itself.
+    /// <c>Process.StartTime</c> is a UTC timestamp in the round-trip format. When the platform doesn't expose the start time,
+    /// both <c>Process.StartTime</c> and <c>Process.Uptime</c> are <see langword="null"/>.
     /// Safe to call more than once.
     /// </remarks>
     /// <param name="builder">The AppInfo builder.</param>
@@ -24,11 +27,11 @@ public static class EnvironmentAppInfoBuilderExtensions
     {
         ArgumentNullException.ThrowIfNull(builder);
 
+        // ASP.NET Core registers no TimeProvider by default, and this package doesn't add one to the app's services.
         builder.Services.TryAddEnumerable(ServiceDescriptor.Singleton<IAppInfoContributor, EnvironmentAppInfoContributor>(
             services => new EnvironmentAppInfoContributor(
                 services.GetRequiredService<IHostEnvironment>(),
-                services.GetService<TimeProvider>() ?? TimeProvider.System,
-                services.GetService<ProcessStartTime>() ?? ProcessStartTime.Current)));
+                services.GetService<TimeProvider>() ?? TimeProvider.System)));
         return builder;
     }
 }

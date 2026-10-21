@@ -29,7 +29,11 @@ A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core appl
     "/opt/app-root/appsettings.json",
     "/opt/app-root/appsettings.Stage.json"
   ],
-  "ApplicationProcessUptime": "10.09:34:52.5222809",
+  "Process": {
+    "Id": 4711,
+    "StartTime": "2026-10-10T08:12:03.4512345Z",
+    "Uptime": "10.09:34:52.5222809"
+  },
   "HostName": "apps-host-01",
   "ContentRootPath": "/opt/app-root",
   "AssemblyLocation": "/opt/app-root/Company.Billing.Api.dll",
@@ -47,7 +51,7 @@ A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core appl
 | --- | --- |
 | `Dut00.AppInfo` | The endpoint, `ApplicationName`, `Version`, `Environment`, `IsProduction`, `Owner`, custom properties and the extensibility API |
 | `Dut00.AppInfo.Configuration` | `ConfigurationsFiles`: the configuration files the app loaded |
-| `Dut00.AppInfo.Environment` | `ApplicationProcessUptime`, `HostName`, `ContentRootPath`, `AssemblyLocation` |
+| `Dut00.AppInfo.Environment` | `Process` (ID, start time, uptime), `HostName`, `ContentRootPath`, `AssemblyLocation` |
 | `Dut00.AppInfo.ConnectionStrings` | `ConnectionStrings`, with passwords, keys and other secrets masked |
 
 All packages target `net8.0`, `net9.0` and `net10.0` and share one version. They are on [nuget.org](https://www.nuget.org/packages/Dut00.AppInfo) as previews. Install the core package and the ones you need:
