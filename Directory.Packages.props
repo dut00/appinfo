@@ -8,6 +8,7 @@
        Conditional so tools that evaluate the repo by default (for example Dependabot) never look for them. -->
   <ItemGroup Condition="'$(UseLocalPackages)' == 'true'">
     <PackageVersion Include="Dut00.AppInfo" Version="$(AppInfoPackageVersion)" />
+    <PackageVersion Include="Dut00.AppInfo.Build" Version="$(AppInfoPackageVersion)" />
     <PackageVersion Include="Dut00.AppInfo.Configuration" Version="$(AppInfoPackageVersion)" />
     <PackageVersion Include="Dut00.AppInfo.ConnectionStrings" Version="$(AppInfoPackageVersion)" />
     <PackageVersion Include="Dut00.AppInfo.Environment" Version="$(AppInfoPackageVersion)" />

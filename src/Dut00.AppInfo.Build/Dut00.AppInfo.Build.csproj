@@ -1,0 +1,20 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <Description>Extends the Dut00.AppInfo /appinfo endpoint with build details: informational version, commit, branch and build ID.</Description>
+    <PackageTags>$(PackageTags);build;git;commit;ci</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Dut00.AppInfo\Dut00.AppInfo.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Dut00.AppInfo.Build.Tests" />
+  </ItemGroup>
+
+</Project>

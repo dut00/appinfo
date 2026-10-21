@@ -5,10 +5,17 @@
     <Version>1.0.5</Version>
   </PropertyGroup>
 
+  <!-- Shown as "Build.BuildId". In CI stamp the real values, for example Value="$(GITHUB_RUN_ID)".
+       The commit needs no stamp: the SDK appends it to the informational version. -->
+  <ItemGroup>
+    <AssemblyMetadata Include="BuildId" Value="local" />
+  </ItemGroup>
+
   <!-- Default: build against the source. With -p:UseLocalPackages=true: use the packages from ./artifacts
        (run ./build/pack.ps1 first). -->
   <ItemGroup Condition="'$(UseLocalPackages)' != 'true'">
     <ProjectReference Include="..\..\src\Dut00.AppInfo\Dut00.AppInfo.csproj" />
+    <ProjectReference Include="..\..\src\Dut00.AppInfo.Build\Dut00.AppInfo.Build.csproj" />
     <ProjectReference Include="..\..\src\Dut00.AppInfo.Configuration\Dut00.AppInfo.Configuration.csproj" />
     <ProjectReference Include="..\..\src\Dut00.AppInfo.ConnectionStrings\Dut00.AppInfo.ConnectionStrings.csproj" />
     <ProjectReference Include="..\..\src\Dut00.AppInfo.Environment\Dut00.AppInfo.Environment.csproj" />
@@ -17,6 +24,7 @@
 
   <ItemGroup Condition="'$(UseLocalPackages)' == 'true'">
     <PackageReference Include="Dut00.AppInfo" />
+    <PackageReference Include="Dut00.AppInfo.Build" />
     <PackageReference Include="Dut00.AppInfo.Configuration" />
     <PackageReference Include="Dut00.AppInfo.ConnectionStrings" />
     <PackageReference Include="Dut00.AppInfo.Environment" />
