@@ -17,7 +17,7 @@ Adds this key:
 
 ```json
 {
-  "ConfigurationsFiles": [
+  "ConfigurationFiles": [
     "/opt/app-root/appsettings.json",
     "/opt/app-root/appsettings.Stage.json"
   ]

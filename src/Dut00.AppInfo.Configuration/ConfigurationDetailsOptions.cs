@@ -1,7 +1,7 @@
 namespace Dut00.AppInfo.Configuration;
 
 /// <summary>
-/// Options for the <c>ConfigurationsFiles</c> field added by
+/// Options for the <c>ConfigurationFiles</c> field added by
 /// <see cref="ConfigurationAppInfoBuilderExtensions.WithConfigurationDetails"/>.
 /// </summary>
 public sealed class ConfigurationDetailsOptions

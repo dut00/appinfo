@@ -22,7 +22,7 @@ Typical questions it answers:
 | Package | Depends on | Adds |
 | --- | --- | --- |
 | `Dut00.AppInfo` | `Microsoft.AspNetCore.App` (framework reference) | Endpoint, core fields, owner, custom properties, extensibility API |
-| `Dut00.AppInfo.Configuration` | `Dut00.AppInfo` | `ConfigurationsFiles` |
+| `Dut00.AppInfo.Configuration` | `Dut00.AppInfo` | `ConfigurationFiles` |
 | `Dut00.AppInfo.Environment` | `Dut00.AppInfo` | `Process` (ID, start time, uptime), `HostName`, `ContentRootPath`, `AssemblyLocation` |
 | `Dut00.AppInfo.ConnectionStrings` | `Dut00.AppInfo` | `ConnectionStrings` (masked) |
 | `Dut00.AppInfo.Build` | `Dut00.AppInfo` | `Build`: informational version, commit, branch, build ID |
@@ -71,7 +71,7 @@ builder.Services.AddAppInfo(options =>
 | `IAppInfoBuilder.WithProperty(string key, object? value)` | core | Adds a custom key with a constant value. A plain `null` binds to the factory overload and throws; write `(object?)null` for a constant null. A delegate value (e.g. `() => x`) throws `ArgumentException`. |
 | `IAppInfoBuilder.WithProperty(string key, Func<IServiceProvider, object?> factory)` | core | Adds a custom key whose value is computed on every request from the request's service provider. |
 | `IAppInfoBuilder.WithContributor<T>()` | core | Registers a custom `IAppInfoContributor` as scoped. Registering the same type twice has no effect. |
-| `IAppInfoBuilder.WithConfigurationDetails(Action<ConfigurationDetailsOptions>? configure = null)` | Configuration | Adds `ConfigurationsFiles`. |
+| `IAppInfoBuilder.WithConfigurationDetails(Action<ConfigurationDetailsOptions>? configure = null)` | Configuration | Adds `ConfigurationFiles`. |
 | `IAppInfoBuilder.WithEnvironmentDetails()` | Environment | Adds the environment fields. |
 | `IAppInfoBuilder.WithConnectionStrings(Action<ConnectionStringsOptions>? configure = null)` | ConnectionStrings | Adds masked `ConnectionStrings`. |
 | `IAppInfoBuilder.WithBuildDetails(Action<BuildDetailsOptions>? configure = null)` | Build | Adds `Build`. See §7. |
@@ -140,7 +140,7 @@ Errors follow ASP.NET Core defaults:
 | `IsProduction` | bool | core | `IHostEnvironment.IsProduction()` | |
 | `Owner` | string | core (`WithOwner`) | `WithOwner(owner)` | Left out unless `WithOwner` is called. Always a string: further owner details, if ever added, go in separate keys |
 | *custom* | any JSON-serializable value | core (`WithProperty`) | user value or factory | |
-| `ConfigurationsFiles` | string[] | Configuration | File-based configuration providers | Absolute physical paths, in load order |
+| `ConfigurationFiles` | string[] | Configuration | File-based configuration providers | Absolute physical paths, in load order |
 | `Process` | object | Environment | The current process | `Id` (number, `System.Environment.ProcessId`); `StartTime` (string \| null: `Process.StartTime` as a preformatted UTC string in the round-trip format `"O"`, always 7 fraction digits and `Z`, e.g. `"2026-10-20T08:00:00.1234567Z"`, unaffected by custom JSON converters; `null` when the platform doesn't expose it); `Uptime` (string \| null, TimeSpan constant format `[d.]hh:mm:ss[.fffffff]`: now − start time, computed per request with the registered `TimeProvider`, `TimeProvider.System` by default; days and fractions are left out when zero; a clock behind the start time reports `00:00:00`; `null` when the start time is unknown). Replaces the v1 root key `ApplicationProcessUptime` |
 | `HostName` | string | Environment | `System.Environment.MachineName` | |
 | `ContentRootPath` | string | Environment | `IHostEnvironment.ContentRootPath` | |
@@ -180,7 +180,7 @@ Errors follow ASP.NET Core defaults:
   "Version": "1.0.5.0",
   "Environment": "Stage",
   "IsProduction": false,
-  "ConfigurationsFiles": [
+  "ConfigurationFiles": [
     "/opt/app-root/appsettings.json",
     "/opt/app-root/appsettings.Stage.json"
   ],

@@ -17,7 +17,7 @@ public sealed class ConfigurationDetailsTests : IDisposable
     public void Dispose() => _directory.Dispose();
 
     [Fact]
-    public async Task ConfigurationsFiles_ListsLoadedFilesAsAbsolutePathsInLoadOrder()
+    public async Task ConfigurationFiles_ListsLoadedFilesAsAbsolutePathsInLoadOrder()
     {
         var first = _directory.WriteFile("first.json", "{}");
         var second = _directory.WriteFile("second.json", "{}");
@@ -36,18 +36,18 @@ public sealed class ConfigurationDetailsTests : IDisposable
     }
 
     [Fact]
-    public async Task ConfigurationsFiles_ComesAfterCoreFields()
+    public async Task ConfigurationFiles_ComesAfterCoreFields()
     {
         await using var app = await TestApp.StartAsync(b => b.Services.AddAppInfo().WithConfigurationDetails());
 
         var json = await app.GetAppInfoAsync();
 
-        json.PropertyNames().ShouldBe(["ApplicationName", "Version", "Environment", "IsProduction", "ConfigurationsFiles"]);
-        json.GetProperty("ConfigurationsFiles").ValueKind.ShouldBe(JsonValueKind.Array);
+        json.PropertyNames().ShouldBe(["ApplicationName", "Version", "Environment", "IsProduction", "ConfigurationFiles"]);
+        json.GetProperty("ConfigurationFiles").ValueKind.ShouldBe(JsonValueKind.Array);
     }
 
     [Fact]
-    public async Task ConfigurationsFiles_RelativePathWithBasePath_IsResolvedToAbsolutePath()
+    public async Task ConfigurationFiles_RelativePathWithBasePath_IsResolvedToAbsolutePath()
     {
         var expected = _directory.WriteFile("relative.json", "{}");
         await using var app = await TestApp.StartAsync(b =>
@@ -60,7 +60,7 @@ public sealed class ConfigurationDetailsTests : IDisposable
     }
 
     [Fact]
-    public async Task ConfigurationsFiles_ListsXmlAndIniFiles()
+    public async Task ConfigurationFiles_ListsXmlAndIniFiles()
     {
         var xml = _directory.WriteFile("settings.xml", "<settings><Key>value</Key></settings>");
         var ini = _directory.WriteFile("settings.ini", "Key=value");
@@ -210,11 +210,11 @@ public sealed class ConfigurationDetailsTests : IDisposable
 
         var json = await app.GetAppInfoAsync();
 
-        json.GetProperty("configurationsFiles").EnumerateArray().Select(e => e.GetString()).ShouldBe([file]);
+        json.GetProperty("configurationFiles").EnumerateArray().Select(e => e.GetString()).ShouldBe([file]);
     }
 
     private static string?[] Files(JsonElement json) =>
-        [.. json.GetProperty("ConfigurationsFiles").EnumerateArray().Select(e => e.GetString())];
+        [.. json.GetProperty("ConfigurationFiles").EnumerateArray().Select(e => e.GetString())];
 
     /// <summary>
     /// Serves every path from memory, without a physical path, like an embedded resource provider.

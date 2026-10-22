@@ -96,7 +96,7 @@ Namespaces match package names (`Dut00.AppInfo`, `Dut00.AppInfo.Environment`, â€
 ## Extensions
 Each extension is a separate csproj with a ProjectReference to core (packed as a NuGet dependency), one contributor class, one extension-method class, an options class where needed, and internal helpers (for example `ConnectionStringMasker`).
 
-- **Dut00.AppInfo.Configuration**: `WithConfigurationDetails()` adds `ConfigurationsFiles: string[]`.
+- **Dut00.AppInfo.Configuration**: `WithConfigurationDetails()` adds `ConfigurationFiles: string[]`.
   - Source: `IConfiguration as IConfigurationRoot`, then `Providers.OfType<FileConfigurationProvider>()`; the path is the file's `PhysicalPath`, else `PhysicalFileProvider.Root` + path for a missing file, else `Source.Path`. `ChainedConfigurationProvider.Configuration` is searched too, once per root.
   - Missing optional files are left out by default; the `IncludeMissingOptionalFiles` option includes them. Required files are always listed.
 - **Dut00.AppInfo.Environment**: `WithEnvironmentDetails()` adds four keys:

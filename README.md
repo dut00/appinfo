@@ -15,7 +15,7 @@
 > curl https://apps-host-02/appinfo
 > ```
 >
-> `"Version": "2.2.9.0"`, `"ConfigurationsFiles"` with only `appsettings.json`, `"ConnectionStrings"` showing `Data Source=prod-db-copy;...;Password=***`, and `"Owner": "billing-team@company.com"`. That's everything, in one JSON, without logging in anywhere. Five minutes instead of two hours, and nobody had to look at a password to get there.
+> `"Version": "2.2.9.0"`, `"ConfigurationFiles"` with only `appsettings.json`, `"ConnectionStrings"` showing `Data Source=prod-db-copy;...;Password=***`, and `"Owner": "billing-team@company.com"`. That's everything, in one JSON, without logging in anywhere. Five minutes instead of two hours, and nobody had to look at a password to get there.
 
 A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core applications. Like `/healthz` for liveness, it gives operators and tools one well-known address that answers: *which application, version and commit runs here, in which environment and container, on which runtime, who owns it, and how is it configured?*
 
@@ -25,7 +25,7 @@ A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core appl
   "Version": "1.0.5.0",
   "Environment": "Stage",
   "IsProduction": false,
-  "ConfigurationsFiles": [
+  "ConfigurationFiles": [
     "/opt/app-root/appsettings.json",
     "/opt/app-root/appsettings.Stage.json"
   ],
@@ -73,7 +73,7 @@ A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core appl
 | Package | Adds |
 | --- | --- |
 | `Dut00.AppInfo` | The endpoint, `ApplicationName`, `Version`, `Environment`, `IsProduction`, `Owner`, custom properties and the extensibility API |
-| `Dut00.AppInfo.Configuration` | `ConfigurationsFiles`: the configuration files the app loaded |
+| `Dut00.AppInfo.Configuration` | `ConfigurationFiles`: the configuration files the app loaded |
 | `Dut00.AppInfo.Environment` | `Process` (ID, start time, uptime), `HostName`, `ContentRootPath`, `AssemblyLocation` |
 | `Dut00.AppInfo.ConnectionStrings` | `ConnectionStrings`, with passwords, keys and other secrets masked |
 | `Dut00.AppInfo.Build` | `Build`: informational version, git commit, branch and CI build ID |
@@ -137,7 +137,7 @@ app.Run();
 | `WithProperty(key, value)` | core | A custom key with a constant value. For a constant `null`, write `(object?)null`. |
 | `WithProperty(key, sp => ...)` | core | A custom key computed on every request. The factory may resolve scoped services. |
 | `WithContributor<T>()` | core | Everything a custom `IAppInfoContributor` writes |
-| `WithConfigurationDetails(o => ...)` | Configuration | `ConfigurationsFiles`. `o.IncludeMissingOptionalFiles` also lists optional files that don't exist. |
+| `WithConfigurationDetails(o => ...)` | Configuration | `ConfigurationFiles`. `o.IncludeMissingOptionalFiles` also lists optional files that don't exist. |
 | `WithEnvironmentDetails()` | Environment | `Process` and host details. The uptime uses the app's `TimeProvider` if one is registered. |
 | `WithConnectionStrings(o => ...)` | ConnectionStrings | Masked `ConnectionStrings`. `o.SensitiveKeys` and `o.Mask` change what is masked and how. |
 | `WithBuildDetails(o => ...)` | Build | `Build`. The commit works out of the box; stamp the rest with `AssemblyMetadata` (see the [package README](src/Dut00.AppInfo.Build/README.md)). |

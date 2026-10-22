@@ -5,7 +5,7 @@ using Microsoft.Extensions.Options;
 namespace Dut00.AppInfo.Configuration.Internal;
 
 /// <summary>
-/// Writes the <c>ConfigurationsFiles</c> field.
+/// Writes the <c>ConfigurationFiles</c> field.
 /// </summary>
 internal sealed class ConfigurationAppInfoContributor(IConfiguration configuration, IOptions<ConfigurationDetailsOptions> options)
     : IAppInfoContributor
@@ -13,7 +13,7 @@ internal sealed class ConfigurationAppInfoContributor(IConfiguration configurati
     public ValueTask ContributeAsync(AppInfoContext context, CancellationToken cancellationToken)
     {
         // Computed per request: files can appear or disappear while the application runs.
-        context.Set("ConfigurationsFiles", GetConfigurationFiles(configuration, options.Value.IncludeMissingOptionalFiles));
+        context.Set("ConfigurationFiles", GetConfigurationFiles(configuration, options.Value.IncludeMissingOptionalFiles));
         return ValueTask.CompletedTask;
     }
 

@@ -10,7 +10,7 @@ namespace Dut00.AppInfo.Configuration;
 public static class ConfigurationAppInfoBuilderExtensions
 {
     /// <summary>
-    /// Adds <c>ConfigurationsFiles</c>: the absolute paths of the file-based configuration sources
+    /// Adds <c>ConfigurationFiles</c>: the absolute paths of the file-based configuration sources
     /// (JSON, XML, INI, user secrets), in load order.
     /// </summary>
     /// <remarks>
