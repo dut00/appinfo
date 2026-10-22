@@ -30,7 +30,9 @@ A build warning is a build error here (`TreatWarningsAsErrors`). Report any fail
 - Public API names, signatures, defaults and return types match SPEC §3.
 - JSON keys, types, ordering, duplicate-key behavior ("last wins" plus a warning), `null` emission and naming policy match SPEC §4.
 - Connection string masking follows SPEC §5 exactly and **fails closed**: any parse failure or URI-style value masks the whole value. Treat any path where a secret could leak as a blocker.
-- Configuration file detection follows SPEC §6.
+- Configuration file detection follows SPEC §6, build details SPEC §7 and container detection SPEC §8.
+- New multi-value fields follow the shape rule (SPEC §4.1): one root key holding a typed group; escaping follows SPEC §4.5.
+- Tests don't depend on the real machine (environment variables, files, entry assembly); CI sets variables such as `GITHUB_SHA`.
 
 **Project conventions (CLAUDE.md)**
 - Everything is in English: code, comments, XML docs, READMEs, docs.
@@ -39,7 +41,7 @@ A build warning is a build error here (`TreatWarningsAsErrors`). Report any fail
 - Implementation details are `internal` and in an `Internal` namespace; nothing leaks into the public surface by accident.
 - Contributors are registered with `TryAddEnumerable`; registration is safe to call more than once.
 - No `.WithName(...)` on the mapped endpoint; `.WithDisplayName(...)` only.
-- Inside `Dut00.AppInfo.Environment`, `System.Environment` is written in full.
+- `System.Environment` is written in full in every package.
 - Package versions live in `Directory.Packages.props`, never in a csproj. Nothing overrides the shared TFMs or strict settings without a stated reason.
 - `docs/PLAN.md` and `docs/SPEC.md` are updated when behavior or the plan changed. `docs/draft.md` is never edited.
 

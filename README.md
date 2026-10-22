@@ -17,7 +17,7 @@
 >
 > `"Version": "2.2.9.0"`, `"ConfigurationsFiles"` with only `appsettings.json`, `"ConnectionStrings"` showing `Data Source=prod-db-copy;...;Password=***`, and `"Owner": "billing-team@company.com"`. That's everything, in one JSON, without logging in anywhere. Five minutes instead of two hours, and nobody had to look at a password to get there.
 
-A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core applications. Like `/healthz` for liveness, it gives operators and tools one well-known address that answers: *which application and version runs here, in which environment, who owns it, and how is it configured?*
+A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core applications. Like `/healthz` for liveness, it gives operators and tools one well-known address that answers: *which application, version and commit runs here, in which environment and container, on which runtime, who owns it, and how is it configured?*
 
 ```json
 {
@@ -40,6 +40,29 @@ A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core appl
   "ConnectionStrings": {
     "Billing": "Data Source=db.company.com;Initial Catalog=Billing;User ID=***;Password=***"
   },
+  "Build": {
+    "InformationalVersion": "1.0.5+a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+    "Commit": "a1b2c3d4e5f60718293a4b5c6d7e8f9012345678",
+    "Branch": "main",
+    "BuildId": "1234"
+  },
+  "Runtime": {
+    "Framework": ".NET 10.0.0",
+    "RuntimeIdentifier": "linux-x64",
+    "OSDescription": "Ubuntu 24.04.1 LTS",
+    "OSArchitecture": "X64",
+    "ProcessArchitecture": "X64"
+  },
+  "Container": {
+    "IsContainer": true,
+    "IsKubernetes": true,
+    "PodName": "billing-api-7f9c6d5b4-x2kqp",
+    "Namespace": "stage",
+    "NodeName": "aks-node-3"
+  },
+  "Urls": [
+    "http://[::]:8080"
+  ],
   "Owner": "red_team@company.com",
   "Team": "red"
 }
@@ -53,6 +76,10 @@ A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core appl
 | `Dut00.AppInfo.Configuration` | `ConfigurationsFiles`: the configuration files the app loaded |
 | `Dut00.AppInfo.Environment` | `Process` (ID, start time, uptime), `HostName`, `ContentRootPath`, `AssemblyLocation` |
 | `Dut00.AppInfo.ConnectionStrings` | `ConnectionStrings`, with passwords, keys and other secrets masked |
+| `Dut00.AppInfo.Build` | `Build`: informational version, git commit, branch and CI build ID |
+| `Dut00.AppInfo.Runtime` | `Runtime`: .NET runtime, runtime identifier, OS and architectures |
+| `Dut00.AppInfo.Container` | `Container`: container and Kubernetes detection, pod, namespace and node |
+| `Dut00.AppInfo.Server` | `Urls`: the addresses the server listens on |
 
 All packages target `net8.0`, `net9.0` and `net10.0` and share one version. They are on [nuget.org](https://www.nuget.org/packages/Dut00.AppInfo) as previews. Install the core package and the ones you need:
 
@@ -61,15 +88,25 @@ dotnet add package Dut00.AppInfo --prerelease
 dotnet add package Dut00.AppInfo.Configuration --prerelease
 dotnet add package Dut00.AppInfo.Environment --prerelease
 dotnet add package Dut00.AppInfo.ConnectionStrings --prerelease
+dotnet add package Dut00.AppInfo.Build --prerelease
+dotnet add package Dut00.AppInfo.Runtime --prerelease
+dotnet add package Dut00.AppInfo.Container --prerelease
+dotnet add package Dut00.AppInfo.Server --prerelease
 ```
+
+**Upgrading from 0.1:** `Dut00.AppInfo.Environment` now writes the uptime as `Process.Uptime`; the root key `ApplicationProcessUptime` is gone. `+`, `<` and non-ASCII letters are no longer escaped as `\uXXXX` (see [API](#api)).
 
 ## Quick start
 
 ```csharp
 using Dut00.AppInfo;
+using Dut00.AppInfo.Build;
 using Dut00.AppInfo.Configuration;
 using Dut00.AppInfo.ConnectionStrings;
+using Dut00.AppInfo.Container;
 using Dut00.AppInfo.Environment;
+using Dut00.AppInfo.Runtime;
+using Dut00.AppInfo.Server;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -77,6 +114,10 @@ builder.Services.AddAppInfo()
     .WithConfigurationDetails()
     .WithEnvironmentDetails()
     .WithConnectionStrings()
+    .WithBuildDetails()
+    .WithRuntimeDetails()
+    .WithContainerDetails()
+    .WithServerAddresses()
     .WithOwner("red_team@company.com")
     .WithProperty("Team", "red");
 
@@ -97,18 +138,22 @@ app.Run();
 | `WithProperty(key, sp => ...)` | core | A custom key computed on every request. The factory may resolve scoped services. |
 | `WithContributor<T>()` | core | Everything a custom `IAppInfoContributor` writes |
 | `WithConfigurationDetails(o => ...)` | Configuration | `ConfigurationsFiles`. `o.IncludeMissingOptionalFiles` also lists optional files that don't exist. |
-| `WithEnvironmentDetails()` | Environment | Process and host details. The uptime uses the app's `TimeProvider` if one is registered. |
+| `WithEnvironmentDetails()` | Environment | `Process` and host details. The uptime uses the app's `TimeProvider` if one is registered. |
 | `WithConnectionStrings(o => ...)` | ConnectionStrings | Masked `ConnectionStrings`. `o.SensitiveKeys` and `o.Mask` change what is masked and how. |
+| `WithBuildDetails(o => ...)` | Build | `Build`. The commit works out of the box; stamp the rest with `AssemblyMetadata` (see the [package README](src/Dut00.AppInfo.Build/README.md)). |
+| `WithRuntimeDetails()` | Runtime | `Runtime`, computed once. |
+| `WithContainerDetails(o => ...)` | Container | `Container`, detected once. `o.PodNameVariable` and friends match your Downward API variables. |
+| `WithServerAddresses()` | Server | `Urls`, read on every request. |
 | `MapAppInfo(pattern = "/appinfo")` | core | The `GET` endpoint. Returns `IEndpointConventionBuilder`. |
 
-- Keys appear in registration order: the core fields first, then each `With*` call in the order it was made. If two sources set the same key, the later one wins and a warning is logged.
+- Keys appear in registration order: the core fields first, then each `With*` call in the order it was made. Single values sit at the root; related values are grouped under one key (`Process`, `Build`, `Runtime`, `Container`). If two sources set the same key, the later one wins and a warning is logged.
 - Keys are PascalCase by default. `AddAppInfo(o => o.KeyNamingPolicy = JsonNamingPolicy.CamelCase)` changes the key format (any `JsonNamingPolicy` works). `o.JsonSerializerOptions` controls how values are serialized.
 - Characters such as `+`, `<`, `'` and non-ASCII letters are written as-is (`"1.0.5+a1b2c3d"`, not `"1.0.5\u002Ba1b2c3d"`), because the response is JSON for people and tools, not HTML. For the strict escaping, set `o.JsonSerializerOptions.Encoder = JavaScriptEncoder.Default`.
 - `MapAppInfo` can be called more than once with different patterns.
 
 ## Security
 
-**The endpoint is open by default.** It reveals file paths, host names and infrastructure addresses, so protect it like any internal endpoint. `MapAppInfo` returns an `IEndpointConventionBuilder`, so the usual conventions apply. For example, require an authorization policy:
+**The endpoint is open by default.** It reveals file paths, host, pod and node names, ports, exact versions and infrastructure addresses, so protect it like any internal endpoint. `MapAppInfo` returns an `IEndpointConventionBuilder`, so the usual conventions apply. For example, require an authorization policy:
 
 ```csharp
 builder.Services.AddAuthentication(/* your scheme */);
@@ -132,17 +177,17 @@ app.MapAppInfo().RequireHost("*:8081");
 A contributor adds keys to the response. It is resolved from the request's services, so it may depend on scoped services.
 
 ```csharp
-public sealed class BuildInfoContributor(IConfiguration configuration) : IAppInfoContributor
+public sealed class DeploymentContributor(IConfiguration configuration) : IAppInfoContributor
 {
     public ValueTask ContributeAsync(AppInfoContext context, CancellationToken cancellationToken)
     {
-        context.Set("Commit", configuration["Build:Commit"]);
-        context.Set("Pipeline", configuration["Build:Pipeline"]);
+        context.Set("Region", configuration["Deployment:Region"]);
+        context.Set("Slot", configuration["Deployment:Slot"]);
         return ValueTask.CompletedTask;
     }
 }
 
-builder.Services.AddAppInfo().WithContributor<BuildInfoContributor>();
+builder.Services.AddAppInfo().WithContributor<DeploymentContributor>();
 ```
 
 To ship a contributor as a package, add a `With*` extension method on `IAppInfoBuilder` that calls `WithContributor<T>()`. Put it in your package's own namespace, as the packages in this repo do.
@@ -150,7 +195,7 @@ To ship a contributor as a package, add a `With*` extension method on `IAppInfoB
 ## Repository
 
 ```
-src/        the four packages, each with its own README
+src/        the eight packages, each with its own README
 test/       xUnit v3 + Shouldly tests; integration tests run on TestServer
 samples/    Dut00.AppInfo.Sample.Api, a minimal API using all packages
 build/      pack.ps1
@@ -181,8 +226,8 @@ dotnet run --project samples/Dut00.AppInfo.Sample.Api -p:UseLocalPackages=true
 Releases are published to nuget.org by `.github/workflows/release.yml` when a version tag is pushed. It uses nuget.org Trusted Publishing, so no API key is stored in the repo.
 
 ```bash
-git tag v0.1.0-preview.1
-git push origin v0.1.0-preview.1
+git tag v0.2.0-preview.1
+git push origin v0.2.0-preview.1
 ```
 
 The workflow tests, packs with the tag's version, pushes the packages and symbols to nuget.org and creates a GitHub release. A tag with a suffix (`-preview.1`, `-rc.1`) becomes a prerelease. **The tag decides the published version**; `AppInfoPackageVersion` in `Directory.Build.props` is only the default for local packs.

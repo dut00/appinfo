@@ -1,5 +1,10 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
+  <PropertyGroup>
+    <!-- Differs from the library's version, so a test can prove that "Version" comes from the entry assembly. -->
+    <Version>9.8.7</Version>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Dut00.AppInfo\Dut00.AppInfo.csproj" />
   </ItemGroup>

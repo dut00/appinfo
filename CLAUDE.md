@@ -33,7 +33,7 @@ Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the ne
 
 ## Layout
 
-- `src/Dut00.AppInfo*/`: packable libraries. One package per folder; each has its own `README.md`, which goes into the package.
+- `src/Dut00.AppInfo*/`: packable libraries. One package per folder; each has its own `README.md`, which goes into the package. Core plus Configuration, Environment, ConnectionStrings (v1) and Build, Runtime, Container, Server (v0.2).
 - `test/Dut00.AppInfo*.Tests/`: xUnit v3 + Shouldly. Integration tests use `WebApplication.CreateBuilder()` with `UseTestServer()`.
 - `test/Infrastructure/`: shared test helpers (`TestApp`, log capture, JSON helpers; namespace `Dut00.AppInfo.Testing`), linked into every test project by `test/Directory.Build.props`. Don't copy them into a test project.
 - `samples/Dut00.AppInfo.Sample.Api/`: minimal API that uses the packages through ProjectReference. `-p:UseLocalPackages=true` switches it to `./artifacts`.
@@ -49,6 +49,8 @@ Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the ne
 - Public extension methods live in the package's own namespace (`Dut00.AppInfo`, `Dut00.AppInfo.Environment`, …), not in `Microsoft.Extensions.DependencyInjection`. A single `using` should light up a package's API.
 - Implementation details go in an `Internal` namespace and are `internal`. Test projects get access through `InternalsVisibleTo`.
 - A new field is added through an `IAppInfoContributor` registered with `TryAddEnumerable` (the one exception is `WithProperty`: all its contributors share a type, so each is added with `AddSingleton`). Contributors run in registration order, and the JSON keeps the order in which keys were first set.
-- Inside `Dut00.AppInfo.Environment`, write `System.Environment` in full, because the namespace shadows it.
+- Write `System.Environment` in full in every package: inside `Dut00.AppInfo.*` namespaces, `Environment` can resolve to the `Dut00.AppInfo.Environment` namespace.
+- JSON shape: single values go at the root; a set of related values is one root key holding an internal sealed record (`ProcessDetails`, `BuildDetails`, ...), so property order is declaration order and `KeyNamingPolicy` reaches nested names. Store values that need an exact format (timestamps, enum names) as preformatted strings.
+- Tests never read the real machine: environment variables, files and the entry assembly go through small internal seams (an internal type with a static `Current`, resolved as `GetService<T>() ?? T.Current`) that tests replace. CI sets variables such as `GITHUB_SHA` in the test process.
 - Don't put `.WithName(...)` on the mapped endpoint. Endpoint names must be globally unique, so mapping `/appinfo` twice would break routing. Use `.WithDisplayName(...)` instead.
 - Masking must fail closed. If a connection string can't be parsed, mask the whole value.

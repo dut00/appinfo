@@ -21,9 +21,10 @@ public sealed class ResponseTests
         json.PropertyNames().ShouldBe(["ApplicationName", "Version", "Environment", "IsProduction"]);
         json.GetProperty("ApplicationName").GetString().ShouldBe(TestApp.ApplicationName);
 
-        // The test assembly is the entry assembly; its version comes from <Version> in Directory.Build.props.
+        // The test assembly is the entry assembly. Its csproj sets its own <Version>, unlike the library's,
+        // so this fails if the version were read from the library or the executing assembly.
         Assembly.GetEntryAssembly().ShouldBe(typeof(ResponseTests).Assembly);
-        json.GetProperty("Version").GetString().ShouldBe("0.1.0.0");
+        json.GetProperty("Version").GetString().ShouldBe("9.8.7.0");
         json.GetProperty("Environment").GetString().ShouldBe(TestApp.DefaultEnvironmentName);
         json.GetProperty("IsProduction").GetBoolean().ShouldBeFalse();
     }

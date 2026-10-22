@@ -43,21 +43,21 @@ Keys appear in registration order. Use `o.KeyNamingPolicy = JsonNamingPolicy.Cam
 
 Characters such as `+`, `<`, `'` and non-ASCII letters are written as-is (`"1.0.5+a1b2c3d"`, not `"1.0.5\u002Ba1b2c3d"`). For the strict escaping of System.Text.Json, set `o.JsonSerializerOptions.Encoder = JavaScriptEncoder.Default`.
 
-More fields come from the extension packages: `Dut00.AppInfo.Configuration`, `Dut00.AppInfo.Environment` and `Dut00.AppInfo.ConnectionStrings`.
+More fields come from the extension packages: `Dut00.AppInfo.Configuration`, `Dut00.AppInfo.Environment`, `Dut00.AppInfo.ConnectionStrings`, `Dut00.AppInfo.Build`, `Dut00.AppInfo.Runtime`, `Dut00.AppInfo.Container` and `Dut00.AppInfo.Server`.
 
 ## Custom contributors
 
 ```csharp
-public sealed class GitInfoContributor : IAppInfoContributor
+public sealed class RegionContributor : IAppInfoContributor
 {
     public ValueTask ContributeAsync(AppInfoContext context, CancellationToken cancellationToken)
     {
-        context.Set("Commit", System.Environment.GetEnvironmentVariable("GIT_COMMIT"));
+        context.Set("Region", System.Environment.GetEnvironmentVariable("REGION"));
         return ValueTask.CompletedTask;
     }
 }
 
-builder.Services.AddAppInfo().WithContributor<GitInfoContributor>();
+builder.Services.AddAppInfo().WithContributor<RegionContributor>();
 ```
 
 > The endpoint is open by default and may expose internal details. Protect it, for example with `app.MapAppInfo().RequireAuthorization()`.

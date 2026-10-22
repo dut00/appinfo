@@ -14,7 +14,7 @@
        AppInfoPackageVersion is separate from Version so the sample can reference the local packages
        by it while setting its own Version. -->
   <PropertyGroup>
-    <AppInfoPackageVersion>0.1.0</AppInfoPackageVersion>
+    <AppInfoPackageVersion>0.2.0</AppInfoPackageVersion>
     <Version>$(AppInfoPackageVersion)</Version>
     <Authors>Kuba</Authors>
     <Copyright>Copyright (c) 2026 Kuba</Copyright>
