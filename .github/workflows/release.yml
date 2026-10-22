@@ -1,7 +1,7 @@
 name: Release
 
 # Publishes the packages to nuget.org when a version tag is pushed:
-#   git tag v1.0.0 && git push origin v1.0.0
+#   git tag v1.0.1 && git push origin v1.0.1
 # A tag with a suffix (-preview.1, -rc.1, ...) becomes a NuGet prerelease and a GitHub prerelease.
 on:
   push:

@@ -23,7 +23,7 @@ Guidance for Claude Code when working in this repository.
 dotnet build Dut00.AppInfo.slnx           # builds net8.0, net9.0 and net10.0
 dotnet test --solution Dut00.AppInfo.slnx # tests run on net8.0 and net10.0
 dotnet run --project samples/Dut00.AppInfo.Sample.Api   # then GET /appinfo
-pwsh ./build/pack.ps1                          # packs into ./artifacts (local NuGet feed), clears cached copies
+pwsh ./build/pack.ps1                          # packs into ./artifacts (local NuGet feed), clears cached local copies
                                                # Windows PowerShell 5.1: powershell -ExecutionPolicy Bypass -File build/pack.ps1
 dotnet run --project samples/Dut00.AppInfo.Sample.Api -p:UseLocalPackages=true   # sample on the packed packages
 ```
@@ -37,12 +37,12 @@ Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the ne
 - `src/Dut00.AppInfo*/`: packable libraries. One package per folder; each has its own `README.md`, which goes into the package. Core plus Configuration, Environment, ConnectionStrings, Build, Runtime, Container and Server.
 - `test/Dut00.AppInfo*.Tests/`: xUnit v3 + Shouldly. Integration tests use `WebApplication.CreateBuilder()` with `UseTestServer()`.
 - `test/Infrastructure/`: shared test helpers (`TestApp`, log capture, JSON helpers; namespace `Dut00.AppInfo.Testing`), linked into every test project by `test/Directory.Build.props`. Don't copy them into a test project.
-- `samples/Dut00.AppInfo.Sample.Api/`: minimal API that uses the packages through ProjectReference. `-p:UseLocalPackages=true` switches it to `./artifacts`.
+- `samples/Dut00.AppInfo.Sample.Api/`: minimal API that uses the packages through ProjectReference. `-p:UseLocalPackages=true` switches it to `./artifacts`, a feed registered only in `samples/nuget.config`: the root `nuget.config` maps every package to nuget.org, because package validation downloads the 1.0.0 baseline from there.
 - `.github/`: `workflows/ci.yml` builds and tests on Linux, Windows and macOS, then packs (skipped when only the root README, `docs/`, `LICENSE` or Claude files change; package READMEs still trigger it); `workflows/release.yml` publishes to nuget.org on a `v*` tag (Trusted Publishing, `nuget` environment, `NUGET_USER` variable); `dependabot.yml` updates NuGet packages (not `Microsoft.AspNetCore.TestHost`: bump its per-TFM versions by hand), GitHub Actions and the SDK in `global.json` (within .NET 10). Tests must pass on Linux too: don't assume `\` is a path separator.
 - `assets/icon.png`: the package icon. `Directory.Build.props` adds it to every package only if the file exists.
 - `Directory.Build.props`: shared TFMs, strict compiler settings and NuGet metadata. Projects under `src/` become packable automatically.
 - `.claude/agents/code-reviewer.md`: read-only review subagent that checks changes against the spec and these conventions.
-- `Directory.Packages.props`: Central Package Management. Add versions there, never in a csproj. The repo's own packages use `$(AppInfoPackageVersion)`; bump the version there (in `Directory.Build.props`), not in `<Version>`. `Microsoft.AspNetCore.TestHost` has one version per TFM.
+- `Directory.Packages.props`: Central Package Management. Add versions there, never in a csproj. The repo's own packages use `$(AppInfoPackageVersion)`; bump the version there (in `Directory.Build.props`), not in `<Version>`. It is the next version with a `-dev` suffix (`1.0.1-dev`): local packs must never share an ID and version with a published package, because the global packages folder can hold only one of them. Bump it after each release. `Microsoft.AspNetCore.TestHost` has one version per TFM.
 
 ## Conventions and gotchas
 
@@ -54,5 +54,5 @@ Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the ne
 - JSON shape: single values go at the root; a set of related values is one root key holding an internal sealed record (`ProcessDetails`, `BuildDetails`, ...), so property order is declaration order and `KeyNamingPolicy` reaches nested names. Store values that need an exact format (timestamps, enum names) as preformatted strings.
 - Tests never read the real machine: environment variables, files and the entry assembly go through small internal seams (an internal type with a static `Current`, resolved as `GetService<T>() ?? T.Current`) that tests replace. CI sets variables such as `GITHUB_SHA` in the test process.
 - Don't put `.WithName(...)` on the mapped endpoint. Endpoint names must be globally unique, so mapping `/appinfo` twice would break routing. Use `.WithDisplayName(...)` instead.
-- `EnablePackageValidation` is on for packable projects. Once 1.0.0 is published, `PackageValidationBaselineVersion` makes pack fail on breaking API changes; a brand-new package must not get a baseline before its first release.
+- Package validation is on for packable projects with `PackageValidationBaselineVersion` (the last released version, now 1.0.0): pack fails on breaking API changes against the packages on nuget.org. After each release, raise it to the version just released, together with the `-dev` bump of `AppInfoPackageVersion`. The baseline is a `PackageDownload`, so every restore of a `src` project needs nuget.org (once, then it is cached). A package added later has no baseline: set `<PackageValidationBaselineVersion></PackageValidationBaselineVersion>` in its csproj until its first release. An intentional break in a major release: generate `CompatibilitySuppressions.xml` with `-p:ApiCompatGenerateSuppressionFile=true` in the same change.
 - Masking must fail closed. If a connection string can't be parsed, mask the whole value.

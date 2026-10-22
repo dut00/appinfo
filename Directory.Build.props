@@ -12,9 +12,11 @@
 
   <!-- Shared NuGet metadata. Every package in src/ gets the same version.
        AppInfoPackageVersion is separate from Version so the sample can reference the local packages
-       by it while setting its own Version. -->
+       by it while setting its own Version. Releases take their version from the tag; this value is for local builds
+       and packs: the next version with a -dev suffix, which is never published, so a local pack never has the ID and
+       version of a package on nuget.org (such as the package validation baseline). Bump it after each release. -->
   <PropertyGroup>
-    <AppInfoPackageVersion>1.0.0</AppInfoPackageVersion>
+    <AppInfoPackageVersion>1.0.1-dev</AppInfoPackageVersion>
     <Version>$(AppInfoPackageVersion)</Version>
     <Authors>Kuba</Authors>
     <Copyright>Copyright (c) 2026 Kuba</Copyright>
@@ -34,10 +36,14 @@
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <!-- Checks on pack that the package is consistent across its target frameworks. Once 1.0.0 is on nuget.org,
-         set PackageValidationBaselineVersion to 1.0.0 so pack also fails on breaking API changes against it
-         (a new package added later must not get the baseline until it has been released once). -->
+    <!-- Checks on pack that the package is consistent across its target frameworks and has no breaking API changes
+         against the baseline downloaded from nuget.org (every restore downloads it, as a PackageDownload). After each
+         release, raise it to the version just released (together with the -dev bump of AppInfoPackageVersion), so an
+         API added in 1.1 and removed in 1.2 is caught too. A package added later sets its own value in its csproj:
+         empty until its first release. An intentional break in a major release needs CompatibilitySuppressions.xml
+         (-p:ApiCompatGenerateSuppressionFile=true) in the same change. -->
     <EnablePackageValidation>true</EnablePackageValidation>
+    <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PackageReadmeFile)' == 'README.md' And Exists('$(MSBuildProjectDirectory)/README.md')">

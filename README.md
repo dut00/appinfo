@@ -224,18 +224,18 @@ pwsh ./build/pack.ps1        # Windows PowerShell 5.1: powershell -ExecutionPoli
 dotnet run --project samples/Dut00.AppInfo.Sample.Api -p:UseLocalPackages=true
 ```
 
-`pack.ps1` writes the packages to `./artifacts`, which `nuget.config` registers as a local feed, and clears their cached copies so the next restore picks up the new build. With `-p:UseLocalPackages=true` the sample uses those packages instead of project references. To use them in another project, add `./artifacts` as a package source.
+`pack.ps1` writes the packages to `./artifacts`, which `samples/nuget.config` registers as a local feed for the sample only (everything else, including the package validation baseline, comes from nuget.org), and removes their cached copies so the next restore picks up the new build. Local packs use `AppInfoPackageVersion` from `Directory.Build.props`, the next version with a `-dev` suffix (for example `1.0.1-dev`), so they never share a version with a package on nuget.org. With `-p:UseLocalPackages=true` the sample uses those packages instead of project references. To use them in another project, add `./artifacts` as a package source.
 
 ### Releasing
 
 Releases are published to nuget.org by `.github/workflows/release.yml` when a version tag is pushed. It uses nuget.org Trusted Publishing, so no API key is stored in the repo.
 
 ```bash
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
-The workflow tests, packs with the tag's version, pushes the packages and symbols to nuget.org and creates a GitHub release. A tag with a suffix (`-preview.1`, `-rc.1`) becomes a prerelease. Pack runs package validation; once 1.0.0 is published, set `PackageValidationBaselineVersion` to `1.0.0` in `Directory.Build.props` so breaking API changes fail the build. **The tag decides the published version**; `AppInfoPackageVersion` in `Directory.Build.props` is only the default for local packs.
+The workflow tests, packs with the tag's version, pushes the packages and symbols to nuget.org and creates a GitHub release. A tag with a suffix (`-preview.1`, `-rc.1`) becomes a prerelease. Pack runs package validation against the last released packages on nuget.org (`PackageValidationBaselineVersion` in `Directory.Build.props`), so a breaking API change fails the build. **The tag decides the published version**; `AppInfoPackageVersion` in `Directory.Build.props` is only the default for local builds and packs. After a release, bump both versions in `Directory.Build.props`: after `v1.0.1`, `AppInfoPackageVersion` = `1.0.2-dev` and `PackageValidationBaselineVersion` = `1.0.1`.
 
 One-time setup:
 

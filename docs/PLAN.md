@@ -26,13 +26,14 @@ Agreed decisions:
 appinfo-nuget/
 ├─ Dut00.AppInfo.slnx
 ├─ Directory.Build.props        # TFMs, LangVersion, Nullable, ImplicitUsings, TreatWarningsAsErrors,
-│                               # NuGet metadata (Authors, MIT license, RepositoryUrl, AppInfoPackageVersion=1.0.0 -> Version,
+│                               # NuGet metadata (Authors, MIT license, RepositoryUrl, AppInfoPackageVersion=1.0.1-dev -> Version,
 │                               # PackageReadmeFile, GenerateDocumentationFile, Deterministic, snupkg symbols)
 ├─ Directory.Packages.props     # CPM: xunit.v3 (Microsoft.Testing.Platform, no VSTest packages),
 │                               # Shouldly, Microsoft.AspNetCore.TestHost (versions per TFM), TimeProvider.Testing,
 │                               # and the repo's own packages for the sample's local-feed mode
 ├─ global.json                  # SDK 10.0.x, rollForward latestFeature, test runner = Microsoft.Testing.Platform
-├─ nuget.config                 # nuget.org + local ./artifacts source
+├─ nuget.config                 # nuget.org only (also the source of the package validation baseline);
+│                               # samples/nuget.config adds the local ./artifacts feed for the sample
 ├─ .gitignore, .gitattributes, .editorconfig, README.md, LICENSE
 ├─ CLAUDE.md                    # guidance for Claude Code; .claude/agents/code-reviewer.md is the review subagent
 ├─ docs/PLAN.md                 # copy of this plan
@@ -41,7 +42,7 @@ appinfo-nuget/
 ├─ .github/                     # workflows/ci.yml (build + test on Linux, Windows, macOS; pack),
 │                               # workflows/release.yml (v* tag -> nuget.org via Trusted Publishing), dependabot.yml
 ├─ assets/icon.png              # package icon (added to packages only when present)
-├─ build/pack.ps1               # dotnet pack -c Release -o ./artifacts (+ clears dut00.appinfo* from NuGet cache)
+├─ build/pack.ps1               # dotnet pack -c Release -o ./artifacts (+ clears local copies of dut00.appinfo* from the NuGet cache)
 ├─ src/
 │  ├─ Dut00.AppInfo/
 │  ├─ Dut00.AppInfo.Configuration/
@@ -127,7 +128,7 @@ The contract (field names, sources, precedence, `null` rules) is in SPEC §2, §
 - `appsettings.json` contains a sample connection string with a password, to show masking.
 - `launchSettings.json` opens `/appinfo`.
 - The sample uses ProjectReference by default. Building with `-p:UseLocalPackages=true` switches to PackageReference against `./artifacts` (conditional ItemGroup in the csproj). Package versions come from `AppInfoPackageVersion` in `Directory.Build.props` (separate from `Version`, which the sample overrides), listed in `Directory.Packages.props`.
-- `build/pack.ps1` (run with `pwsh ./build/pack.ps1`, or `powershell -ExecutionPolicy Bypass -File build/pack.ps1`; `-Version` overrides `AppInfoPackageVersion`) packs into `./artifacts` and removes `dut00.appinfo*` from the NuGet global packages folder, because local packs reuse the same version and NuGet never refreshes a cached version.
+- `build/pack.ps1` (run with `pwsh ./build/pack.ps1`, or `powershell -ExecutionPolicy Bypass -File build/pack.ps1`; `-Version` overrides `AppInfoPackageVersion`) packs into `./artifacts` and removes the `dut00.appinfo*` packages extracted from `./artifacts` from the NuGet global packages folder, before and after packing, because local packs reuse the same version and NuGet never refreshes a cached version. Packages from nuget.org (the package validation baseline) stay. Since 1.0, local builds use a `-dev` version (`AppInfoPackageVersion`, bumped after each release), so a local pack never collides with a published one.
 
 ## Tests (xUnit + Shouldly)
 - Shared helpers in `test/Infrastructure/`, compiled into every test project by `test/Directory.Build.props`: `TestApp` uses `WebApplication.CreateBuilder()` + `builder.WebHost.UseTestServer()` with a fixed application name, environment and content root, captures logs, and offers `GetAppInfoAsync()` (a parsed `JsonElement`) or `GetAppInfoStringAsync()` (the raw body).
@@ -180,7 +181,7 @@ Each package step includes: the package (csproj, API, options, contributor, pack
     - fix `KeyNamingPolicy`: applied through an `IPostConfigureOptions` copy instead of being written into the assigned `JsonSerializerOptions`, which threw on read-only instances and made every request return 500;
     - `Cache-Control: no-store` on the response;
     - default `SensitiveKeys` gain `Auth`, `Sig`, `Sas`, `Jwt`;
-    - `EnablePackageValidation` (set `PackageValidationBaselineVersion` to `1.0.0` once it is published);
+    - `EnablePackageValidation`; `PackageValidationBaselineVersion` = `1.0.0` was set after the release (see "After 1.0");
     - documentation (README without `--prerelease`, upgrade notes, SPEC 1.0, AOT moved to "After 1.0"), `AppInfoPackageVersion` = `1.0.0`. Release by tagging `v1.0.0`.
 
 ## Verification
@@ -197,7 +198,7 @@ Each package step includes: the package (csproj, API, options, contributor, pack
   - serialize every value through `JsonSerializerOptions.GetTypeInfo(value.GetType())`, with a resolver chain of the internal context, the user's `TypeInfoResolver` and, only when reflection is enabled, `DefaultJsonTypeInfoResolver`; custom values then need the user's own context;
   - `IsAotCompatible` on the `src` projects, so new warnings fail the build, and a `PublishAot` sample or test that calls `/appinfo`;
   - `Assembly.Location` (IL3000) is already handled: single-file apps get `null`.
-- Once 1.0.0 is on nuget.org: `PackageValidationBaselineVersion` = `1.0.0`.
+- Done after the 1.0.0 release: `PackageValidationBaselineVersion` = `1.0.0` in `Directory.Build.props` (raised to each released version afterwards, with the `-dev` bump). The baseline is downloaded from nuget.org, so the local `./artifacts` feed moved from the root `nuget.config` to `samples/nuget.config` (the root mapped `Dut00.AppInfo*` to the local feed only). `AppInfoPackageVersion` became `1.0.1-dev`: a local pack of `1.0.0` would share the global packages folder entry with the published baseline, and a cached package bypasses source mapping, so either one could silently stand in for the other.
 
 ## Out of scope for v1
 Dut00.AppInfo.Serilog (`Serilog:WriteTo` section with masking) was planned for after v1, then dropped. (CI, Dependabot and the nuget.org release workflow were added after v1.)
