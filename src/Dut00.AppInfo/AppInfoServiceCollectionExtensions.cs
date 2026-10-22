@@ -1,6 +1,7 @@
 using Dut00.AppInfo.Internal;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.Extensions.Options;
 
 namespace Dut00.AppInfo;
 
@@ -30,6 +31,7 @@ public static class AppInfoServiceCollectionExtensions
         }
 
         services.TryAddSingleton<AppInfoMarkerService>();
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<IPostConfigureOptions<AppInfoOptions>, AppInfoPostConfigureOptions>());
         services.TryAddEnumerable(ServiceDescriptor.Singleton<IAppInfoContributor, CoreAppInfoContributor>());
 
         return new AppInfoBuilder(services);

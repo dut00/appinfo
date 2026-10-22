@@ -71,12 +71,47 @@ public sealed class NamingPolicyTests
     }
 
     [Fact]
-    public void KeyNamingPolicy_SetsPropertyNamingPolicyOnly()
+    public async Task KeyNamingPolicy_WithReadOnlySerializerOptions_Works()
+    {
+        // JsonSerializerOptions.Default is read-only: the policy must not be set on it.
+        await using var app = await TestApp.StartAsync(b => b.Services
+            .AddAppInfo(o =>
+            {
+                o.JsonSerializerOptions = JsonSerializerOptions.Default;
+                o.KeyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+            })
+            .WithProperty("Details", new { InnerValue = 1 }));
+
+        var json = await app.GetAppInfoAsync();
+
+        json.PropertyNames().ShouldBe(["application_name", "version", "environment", "is_production", "details"]);
+        json.GetProperty("details").PropertyNames().ShouldBe(["inner_value"]);
+        JsonSerializerOptions.Default.PropertyNamingPolicy.ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task KeyNamingPolicy_SetBeforeReplacingSerializerOptions_StillAppliesToNestedProperties()
+    {
+        var replacement = new JsonSerializerOptions();
+        await using var app = await TestApp.StartAsync(b => b.Services
+            .AddAppInfo(o =>
+            {
+                o.KeyNamingPolicy = JsonNamingPolicy.CamelCase;
+                o.JsonSerializerOptions = replacement;
+            })
+            .WithProperty("Details", new { InnerValue = 1 }));
+
+        var json = await app.GetAppInfoAsync();
+
+        json.GetProperty("details").PropertyNames().ShouldBe(["innerValue"]);
+        replacement.PropertyNamingPolicy.ShouldBeNull();
+    }
+
+    [Fact]
+    public void KeyNamingPolicy_DoesNotChangeSerializerOptionsByItself()
     {
         var options = new AppInfoOptions { KeyNamingPolicy = JsonNamingPolicy.CamelCase };
 
-        options.KeyNamingPolicy.ShouldBe(JsonNamingPolicy.CamelCase);
-        options.JsonSerializerOptions.PropertyNamingPolicy.ShouldBe(JsonNamingPolicy.CamelCase);
-        options.JsonSerializerOptions.DictionaryKeyPolicy.ShouldBeNull();
+        options.JsonSerializerOptions.PropertyNamingPolicy.ShouldBeNull();
     }
 }

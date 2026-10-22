@@ -74,7 +74,7 @@ Depends only on `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
 - `IAppInfoBuilder { IServiceCollection Services; }`, implemented by `AppInfoBuilder`
 - `AppInfoOptions`:
   - `JsonSerializerOptions JsonSerializerOptions`. Defaults: `WriteIndented = true`, `PropertyNamingPolicy = null`, `DictionaryKeyPolicy = null` (PascalCase), `Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping` (readable `+`, `<`, non-ASCII; added in v0.2). It applies to values, not to root keys.
-  - `JsonNamingPolicy? KeyNamingPolicy` converts root keys (applied when building the `JsonObject`) and sets `JsonSerializerOptions.PropertyNamingPolicy` for nested object properties. Nested dictionary keys (for example connection string names) stay as-is.
+  - `JsonNamingPolicy? KeyNamingPolicy` converts root keys (applied when building the `JsonObject`). For nested object properties, an internal `IPostConfigureOptions<AppInfoOptions>` replaces `JsonSerializerOptions` with a copy whose `PropertyNamingPolicy` is the policy (1.0: setting it directly on the assigned instance failed on read-only instances such as `JsonSerializerOptions.Web`, so every request returned 500). Nested dictionary keys (for example connection string names) stay as-is.
 - `AddAppInfo(this IServiceCollection, Action<AppInfoOptions>? configure = null)` registers the options and `CoreAppInfoContributor` (via `TryAddEnumerable`) and returns the builder.
 - `CoreAppInfoContributor` writes:
   - `ApplicationName` from `IHostEnvironment.ApplicationName`

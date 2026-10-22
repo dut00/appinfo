@@ -8,8 +8,6 @@ namespace Dut00.AppInfo;
 /// </summary>
 public sealed class AppInfoOptions
 {
-    private JsonNamingPolicy? _keyNamingPolicy;
-
     /// <summary>
     /// Serializer options for the response values. By default output is indented, names are emitted as-is (PascalCase)
     /// and characters such as <c>+</c>, <c>&lt;</c>, <c>'</c> or non-ASCII letters are written as-is, not as <c>\uXXXX</c>.
@@ -35,18 +33,11 @@ public sealed class AppInfoOptions
     /// <see langword="null"/> (the default) emits keys as defined (PascalCase).
     /// </summary>
     /// <remarks>
-    /// Applies to top-level keys and, by also setting <see cref="JsonSerializerOptions.PropertyNamingPolicy"/> on the
-    /// current <see cref="JsonSerializerOptions"/> instance, to properties of nested objects. Keys of nested dictionaries,
-    /// such as connection string names, are user data and stay as-is. Replacing <see cref="JsonSerializerOptions"/>
-    /// afterwards keeps the top-level policy but discards the nested one.
+    /// Applies to top-level keys and to properties of nested objects: once configuration is done, the endpoint uses a copy
+    /// of <see cref="JsonSerializerOptions"/> whose <see cref="JsonSerializerOptions.PropertyNamingPolicy"/> is this policy.
+    /// The order of assignments doesn't matter, and the instance you assign is never modified, so read-only instances such
+    /// as <see cref="JsonSerializerOptions.Default"/> work too. Keys of nested dictionaries, such as connection string names,
+    /// are user data and stay as-is.
     /// </remarks>
-    public JsonNamingPolicy? KeyNamingPolicy
-    {
-        get => _keyNamingPolicy;
-        set
-        {
-            _keyNamingPolicy = value;
-            JsonSerializerOptions.PropertyNamingPolicy = value;
-        }
-    }
+    public JsonNamingPolicy? KeyNamingPolicy { get; set; }
 }
