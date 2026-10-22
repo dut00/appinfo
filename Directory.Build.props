@@ -34,6 +34,10 @@
     <IsPackable>true</IsPackable>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <!-- Checks on pack that the package is consistent across its target frameworks. Once 1.0.0 is on nuget.org,
+         set PackageValidationBaselineVersion to 1.0.0 so pack also fails on breaking API changes against it
+         (a new package added later must not get the baseline until it has been released once). -->
+    <EnablePackageValidation>true</EnablePackageValidation>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PackageReadmeFile)' == 'README.md' And Exists('$(MSBuildProjectDirectory)/README.md')">
