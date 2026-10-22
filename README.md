@@ -96,7 +96,7 @@ dotnet add package Dut00.AppInfo.Server
 
 **Upgrading from the previews:**
 
-- From 0.2: `ConfigurationsFiles` is now `ConfigurationFiles`. `Auth`, `Sig`, `Sas` and `Jwt` joined the default sensitive connection string keys. Responses carry `Cache-Control: no-store`.
+- From 0.2: `ConfigurationsFiles` is now `ConfigurationFiles`. `Auth`, `Sig`, `Sas` and `Jwt` joined the default sensitive connection string keys. Responses carry `Cache-Control: no-store`. `KeyNamingPolicy` no longer modifies the assigned `JsonSerializerOptions`; the endpoint uses a copy with the policy applied.
 - From 0.1: `Dut00.AppInfo.Environment` writes the uptime as `Process.Uptime`; the root key `ApplicationProcessUptime` is gone. `+`, `<` and non-ASCII letters are no longer escaped as `\uXXXX` (see [API](#api)).
 
 ## Quick start

@@ -26,7 +26,7 @@ Agreed decisions:
 appinfo-nuget/
 ├─ Dut00.AppInfo.slnx
 ├─ Directory.Build.props        # TFMs, LangVersion, Nullable, ImplicitUsings, TreatWarningsAsErrors,
-│                               # NuGet metadata (Authors, MIT license, RepositoryUrl, AppInfoPackageVersion=0.2.0 -> Version,
+│                               # NuGet metadata (Authors, MIT license, RepositoryUrl, AppInfoPackageVersion=1.0.0 -> Version,
 │                               # PackageReadmeFile, GenerateDocumentationFile, Deterministic, snupkg symbols)
 ├─ Directory.Packages.props     # CPM: xunit.v3 (Microsoft.Testing.Platform, no VSTest packages),
 │                               # Shouldly, Microsoft.AspNetCore.TestHost (versions per TFM), TimeProvider.Testing,

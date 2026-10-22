@@ -163,7 +163,7 @@ Errors follow ASP.NET Core defaults:
 ### 4.4 Naming policy
 
 - By default, keys are emitted exactly as defined (PascalCase), matching the draft.
-- `AppInfoOptions.KeyNamingPolicy` applies a `JsonNamingPolicy` (for example `CamelCase` or `SnakeCaseLower`) to root keys and to nested object properties. After all `configure` delegates have run, the endpoint uses a copy of `JsonSerializerOptions` with `PropertyNamingPolicy` set to the policy. The order of assignments doesn't matter, and the assigned instance is never modified, so read-only instances (`JsonSerializerOptions.Default`, `JsonSerializerOptions.Web`, or one that has already been used) work.
+- `AppInfoOptions.KeyNamingPolicy` applies a `JsonNamingPolicy` (for example `CamelCase` or `SnakeCaseLower`) to root keys and to nested object properties. After the `Configure` delegates (`AddAppInfo(o => ...)`, `Configure<AppInfoOptions>`) have run, the endpoint uses a copy of `JsonSerializerOptions` with `PropertyNamingPolicy` set to the policy; a `PostConfigure<AppInfoOptions>` registered after `AddAppInfo` runs too late for nested properties, so set the policy in `Configure`. Within those delegates the order of assignments doesn't matter, and the assigned instance is never modified, so read-only instances (`JsonSerializerOptions.Default`, `JsonSerializerOptions.Web`, or one that has already been used) work.
 - Keys of nested dictionaries are user data (for example connection string names) and are emitted as-is. `JsonSerializerOptions.DictionaryKeyPolicy` can still be set to convert them.
 - For full control, `AppInfoOptions.JsonSerializerOptions` can be modified directly; it applies to values, not to root keys. Default: indented output.
 

@@ -21,7 +21,7 @@
     powershell -ExecutionPolicy Bypass -File build/pack.ps1 -Configuration Debug
 
 .EXAMPLE
-    pwsh ./build/pack.ps1 -Version 0.2.0-local
+    pwsh ./build/pack.ps1 -Version 1.0.0-local
 #>
 [CmdletBinding()]
 param(

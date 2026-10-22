@@ -62,4 +62,4 @@ public sealed class RegionContributor : IAppInfoContributor
 builder.Services.AddAppInfo().WithContributor<RegionContributor>();
 ```
 
-> The endpoint is open by default and may expose internal details. Protect it, for example with `app.MapAppInfo().RequireAuthorization()`.
+> The endpoint is open by default and may expose internal details (responses carry `Cache-Control: no-store`). Protect it, for example with `app.MapAppInfo().RequireAuthorization()`.

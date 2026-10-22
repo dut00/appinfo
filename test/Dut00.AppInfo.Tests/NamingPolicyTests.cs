@@ -108,6 +108,18 @@ public sealed class NamingPolicyTests
     }
 
     [Fact]
+    public async Task KeyNamingPolicy_LeavesNestedDictionaryKeysAsIs()
+    {
+        await using var app = await TestApp.StartAsync(b => b.Services
+            .AddAppInfo(o => o.KeyNamingPolicy = JsonNamingPolicy.SnakeCaseLower)
+            .WithProperty("Counts", new Dictionary<string, int> { ["BillingDb"] = 1 }));
+
+        var json = await app.GetAppInfoAsync();
+
+        json.GetProperty("counts").PropertyNames().ShouldBe(["BillingDb"]);
+    }
+
+    [Fact]
     public void KeyNamingPolicy_DoesNotChangeSerializerOptionsByItself()
     {
         var options = new AppInfoOptions { KeyNamingPolicy = JsonNamingPolicy.CamelCase };

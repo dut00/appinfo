@@ -33,10 +33,12 @@ public sealed class AppInfoOptions
     /// <see langword="null"/> (the default) emits keys as defined (PascalCase).
     /// </summary>
     /// <remarks>
-    /// Applies to top-level keys and to properties of nested objects: once configuration is done, the endpoint uses a copy
-    /// of <see cref="JsonSerializerOptions"/> whose <see cref="JsonSerializerOptions.PropertyNamingPolicy"/> is this policy.
-    /// The order of assignments doesn't matter, and the instance you assign is never modified, so read-only instances such
-    /// as <see cref="JsonSerializerOptions.Default"/> work too. Keys of nested dictionaries, such as connection string names,
+    /// Applies to top-level keys and to properties of nested objects: after the <c>Configure</c> delegates
+    /// (<c>AddAppInfo(o =&gt; ...)</c>, <c>Configure&lt;AppInfoOptions&gt;</c>) have run, the endpoint uses a copy of
+    /// <see cref="JsonSerializerOptions"/> whose <see cref="JsonSerializerOptions.PropertyNamingPolicy"/> is this policy.
+    /// Set it in a <c>Configure</c> delegate, not in <c>PostConfigure</c>. Within those delegates the order of assignments
+    /// doesn't matter, and the instance you assign is never modified, so read-only instances such as
+    /// <see cref="JsonSerializerOptions.Default"/> work too. Keys of nested dictionaries, such as connection string names,
     /// are user data and stay as-is.
     /// </remarks>
     public JsonNamingPolicy? KeyNamingPolicy { get; set; }
