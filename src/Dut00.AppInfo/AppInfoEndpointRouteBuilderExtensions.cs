@@ -27,7 +27,7 @@ public static class AppInfoEndpointRouteBuilderExtensions
     /// Maps a <c>GET</c> endpoint that returns the AppInfo JSON document.
     /// </summary>
     /// <remarks>
-    /// The endpoint is open by default. Protect it with conventions on the returned builder,
+    /// The response carries <c>Cache-Control: no-store</c>. The endpoint is open by default. Protect it with conventions on the returned builder,
     /// for example <c>.RequireAuthorization()</c> or <c>.RequireHost()</c>.
     /// </remarks>
     /// <param name="endpoints">The application's endpoint route builder.</param>
@@ -57,6 +57,10 @@ public static class AppInfoEndpointRouteBuilderExtensions
         var options = services.GetRequiredService<IOptions<AppInfoOptions>>().Value;
         var logger = services.GetRequiredService<ILoggerFactory>().CreateLogger(LoggerCategory);
         var cancellationToken = httpContext.RequestAborted;
+
+        // The body describes internal infrastructure and changes over time: browsers and proxies must not store it.
+        // Set before the contributors run, so one of them can still change it.
+        httpContext.Response.Headers.CacheControl = "no-store";
 
         var context = new AppInfoContext(httpContext, logger);
         foreach (var contributor in services.GetServices<IAppInfoContributor>())

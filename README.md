@@ -168,6 +168,7 @@ Or answer only on an internal port:
 app.MapAppInfo().RequireHost("*:8081");
 ```
 
+- Responses carry `Cache-Control: no-store`, so browsers and proxies don't keep copies.
 - The core package never emits secrets on its own. Values you pass to `WithProperty` are written as-is.
 - `Dut00.AppInfo.ConnectionStrings` always masks, and masking **fails closed**: a value it can't fully understand (URI-style, unparseable, Redis-style, split ODBC braces) is replaced completely with the mask (`***` by default). See the [package README](src/Dut00.AppInfo.ConnectionStrings/README.md) for the rules and known limitations. Masking reduces risk; it doesn't make the endpoint safe to expose publicly.
 - The JSON doesn't escape HTML-sensitive characters such as `<` (see the API notes above). A dashboard that embeds the body in HTML must encode it like any untrusted text.

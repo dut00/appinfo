@@ -86,7 +86,7 @@ Depends only on `<FrameworkReference Include="Microsoft.AspNetCore.App" />`.
   - `WithProperty(string key, object? value)` and `WithProperty(string key, Func<IServiceProvider, object?> factory)` add custom fields through `DelegateAppInfoContributor`.
   - `WithContributor<T>() where T : class, IAppInfoContributor` is the hook for third-party extensions.
 - `MapAppInfo(this IEndpointRouteBuilder, string pattern = "/appinfo")`:
-  - registers a `MapGet` that runs every `IEnumerable<IAppInfoContributor>` in registration order;
+  - registers a `MapGet` that sets `Cache-Control: no-store` (1.0; before the contributors run, so one can change it) and runs every `IEnumerable<IAppInfoContributor>` in registration order;
   - writes a `JsonObject` (keeps key order; root keys converted by `KeyNamingPolicy`) with `WriteAsJsonAsync` and `options.JsonSerializerOptions`;
   - returns `IEndpointConventionBuilder` and sets the display name `AppInfo` (not `WithName`, which must be globally unique and would break mapping twice).
 - Each package has its own `README.md` (PackageReadmeFile).

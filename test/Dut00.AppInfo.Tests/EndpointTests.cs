@@ -22,6 +22,30 @@ public sealed class EndpointTests
     }
 
     [Fact]
+    public async Task MapAppInfo_ResponseIsNotStored()
+    {
+        await using var app = await TestApp.StartAsync(b => b.Services.AddAppInfo());
+
+        using var response = await app.GetAsync();
+
+        response.Headers.CacheControl.ShouldNotBeNull();
+        response.Headers.CacheControl.NoStore.ShouldBeTrue();
+        response.Headers.CacheControl.ToString().ShouldBe("no-store");
+    }
+
+    [Fact]
+    public async Task MapAppInfo_ContributorCanChangeCacheControl()
+    {
+        await using var app = await TestApp.StartAsync(b => b.Services.AddAppInfo().WithContributor<CacheControlContributor>());
+
+        using var response = await app.GetAsync();
+
+        response.Headers.CacheControl.ShouldNotBeNull();
+        response.Headers.CacheControl.NoStore.ShouldBeFalse();
+        response.Headers.CacheControl.MaxAge.ShouldBe(TimeSpan.FromSeconds(60));
+    }
+
+    [Fact]
     public async Task MapAppInfo_CustomPattern_ServesOnlyThatPath()
     {
         await using var app = await TestApp.StartAsync(
@@ -125,5 +149,14 @@ public sealed class EndpointTests
         using var response = await app.GetAsync();
 
         response.StatusCode.ShouldBe(HttpStatusCode.Unauthorized);
+    }
+
+    private sealed class CacheControlContributor : IAppInfoContributor
+    {
+        public ValueTask ContributeAsync(AppInfoContext context, CancellationToken cancellationToken)
+        {
+            context.HttpContext.Response.Headers.CacheControl = "private, max-age=60";
+            return ValueTask.CompletedTask;
+        }
     }
 }

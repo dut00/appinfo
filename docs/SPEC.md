@@ -122,6 +122,7 @@ public sealed class AppInfoContext
 | Method | `GET` |
 | Success status | `200 OK` |
 | Content-Type | `application/json; charset=utf-8` |
+| Cache-Control | `no-store`, set before the contributors run, so a contributor can change it |
 | Body | A single JSON object (see the shape rule below) |
 
 Shape rule: a package that adds unrelated single values writes them as keys at the root (`HostName`, `Urls`). A package that adds a set of related values groups them under **one root key whose value is an object** (`Process`, `Build`, `Runtime`, `Container`). Inside a group, every property is always written, as `null` when unknown (subject to `JsonSerializerOptions.DefaultIgnoreCondition`).
@@ -298,7 +299,7 @@ Connection string names are user data and are emitted as-is, regardless of `KeyN
 - `Urls`, `Container` and `Runtime` reveal ports, pod and node names and exact versions, which helps an attacker map the infrastructure: one more reason to protect the endpoint.
 - `Build` reads only the configuration keys and environment variables named in §7, plus any variables the user adds to the `*EnvironmentVariables` lists.
 - `Container` reads only the environment variables and files named in §8.
-- No caching is applied. Responses reflect the state at request time.
+- No caching is applied: responses reflect the state at request time, and `Cache-Control: no-store` tells browsers and proxies not to keep a copy of the internal details. An explicit server-side convention such as `CacheOutput` still caches, because the app asked for it.
 - Values may contain arbitrary text (custom properties, configuration, connection string names), and HTML-sensitive characters such as `<` are not escaped (§4.5). A tool that embeds the body in HTML must encode it like any untrusted text.
 
 ## 10. Non-goals
