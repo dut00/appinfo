@@ -43,6 +43,8 @@ Keys appear in registration order. Use `o.KeyNamingPolicy = JsonNamingPolicy.Cam
 
 Characters such as `+`, `<`, `'` and non-ASCII letters are written as-is (`"1.0.5+a1b2c3d"`, not `"1.0.5\u002Ba1b2c3d"`). For the strict escaping of System.Text.Json, set `o.JsonSerializerOptions.Encoder = JavaScriptEncoder.Default`.
 
+Native AOT and trimming aren't supported yet: values are serialized with reflection-based System.Text.Json.
+
 More fields come from the extension packages: `Dut00.AppInfo.Configuration`, `Dut00.AppInfo.Environment`, `Dut00.AppInfo.ConnectionStrings`, `Dut00.AppInfo.Build`, `Dut00.AppInfo.Runtime`, `Dut00.AppInfo.Container` and `Dut00.AppInfo.Server`.
 
 ## Custom contributors

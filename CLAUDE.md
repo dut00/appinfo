@@ -14,7 +14,8 @@ Guidance for Claude Code when working in this repository.
 
 - **Everything in the repo is written in English**: code, comments, XML docs, READMEs, docs, commit messages. The user writes to you in Polish, so answer in Polish.
 - **Never commit without asking.** After each plan step, run build and tests, then run the `code-reviewer` subagent (`.claude/agents/code-reviewer.md`) on the uncommitted changes and fix or explicitly raise its findings. Then summarize the result, ask whether to commit and propose a message.
-- Follow the steps in `docs/PLAN.md` in order, and don't start features that are out of scope for v1.
+- Follow the steps in `docs/PLAN.md` in order, and don't start features that the plan defers ("After 1.0", "Out of scope").
+- Since 1.0 the JSON contract and public API follow SemVer (SPEC §2): don't rename or remove keys or public members in a minor release.
 
 ## Commands
 
@@ -33,7 +34,7 @@ Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the ne
 
 ## Layout
 
-- `src/Dut00.AppInfo*/`: packable libraries. One package per folder; each has its own `README.md`, which goes into the package. Core plus Configuration, Environment, ConnectionStrings (v1) and Build, Runtime, Container, Server (v0.2).
+- `src/Dut00.AppInfo*/`: packable libraries. One package per folder; each has its own `README.md`, which goes into the package. Core plus Configuration, Environment, ConnectionStrings, Build, Runtime, Container and Server.
 - `test/Dut00.AppInfo*.Tests/`: xUnit v3 + Shouldly. Integration tests use `WebApplication.CreateBuilder()` with `UseTestServer()`.
 - `test/Infrastructure/`: shared test helpers (`TestApp`, log capture, JSON helpers; namespace `Dut00.AppInfo.Testing`), linked into every test project by `test/Directory.Build.props`. Don't copy them into a test project.
 - `samples/Dut00.AppInfo.Sample.Api/`: minimal API that uses the packages through ProjectReference. `-p:UseLocalPackages=true` switches it to `./artifacts`.
@@ -53,4 +54,5 @@ Tests use xUnit v3 on Microsoft.Testing.Platform: `global.json` opts into the ne
 - JSON shape: single values go at the root; a set of related values is one root key holding an internal sealed record (`ProcessDetails`, `BuildDetails`, ...), so property order is declaration order and `KeyNamingPolicy` reaches nested names. Store values that need an exact format (timestamps, enum names) as preformatted strings.
 - Tests never read the real machine: environment variables, files and the entry assembly go through small internal seams (an internal type with a static `Current`, resolved as `GetService<T>() ?? T.Current`) that tests replace. CI sets variables such as `GITHUB_SHA` in the test process.
 - Don't put `.WithName(...)` on the mapped endpoint. Endpoint names must be globally unique, so mapping `/appinfo` twice would break routing. Use `.WithDisplayName(...)` instead.
+- `EnablePackageValidation` is on for packable projects. Once 1.0.0 is published, `PackageValidationBaselineVersion` makes pack fail on breaking API changes; a brand-new package must not get a baseline before its first release.
 - Masking must fail closed. If a connection string can't be parsed, mask the whole value.

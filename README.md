@@ -1,7 +1,7 @@
 # <img src="assets/icon.png" alt="" width="48" height="48" align="absmiddle"> Dut00.AppInfo
 
 [![CI](https://github.com/dut00/appinfo/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/dut00/appinfo/actions/workflows/ci.yml)
-[![NuGet](https://img.shields.io/nuget/vpre/Dut00.AppInfo?label=NuGet)](https://www.nuget.org/packages/Dut00.AppInfo)
+[![NuGet](https://img.shields.io/nuget/v/Dut00.AppInfo?label=NuGet)](https://www.nuget.org/packages/Dut00.AppInfo)
 
 > **Friday, 4:47 PM.** Invoices on Stage are coming out with last month's prices. QA opens a ticket against `billing-api`.
 >
@@ -81,20 +81,23 @@ A family of NuGet packages that adds an `/appinfo` endpoint to ASP.NET Core appl
 | `Dut00.AppInfo.Container` | `Container`: container and Kubernetes detection, pod, namespace and node |
 | `Dut00.AppInfo.Server` | `Urls`: the addresses the server listens on |
 
-All packages target `net8.0`, `net9.0` and `net10.0` and share one version. They are on [nuget.org](https://www.nuget.org/packages/Dut00.AppInfo) as previews. Install the core package and the ones you need:
+All packages target `net8.0`, `net9.0` and `net10.0` and share one version. They are on [nuget.org](https://www.nuget.org/packages/Dut00.AppInfo). Install the core package and the ones you need:
 
 ```bash
-dotnet add package Dut00.AppInfo --prerelease
-dotnet add package Dut00.AppInfo.Configuration --prerelease
-dotnet add package Dut00.AppInfo.Environment --prerelease
-dotnet add package Dut00.AppInfo.ConnectionStrings --prerelease
-dotnet add package Dut00.AppInfo.Build --prerelease
-dotnet add package Dut00.AppInfo.Runtime --prerelease
-dotnet add package Dut00.AppInfo.Container --prerelease
-dotnet add package Dut00.AppInfo.Server --prerelease
+dotnet add package Dut00.AppInfo
+dotnet add package Dut00.AppInfo.Configuration
+dotnet add package Dut00.AppInfo.Environment
+dotnet add package Dut00.AppInfo.ConnectionStrings
+dotnet add package Dut00.AppInfo.Build
+dotnet add package Dut00.AppInfo.Runtime
+dotnet add package Dut00.AppInfo.Container
+dotnet add package Dut00.AppInfo.Server
 ```
 
-**Upgrading from 0.1:** `Dut00.AppInfo.Environment` now writes the uptime as `Process.Uptime`; the root key `ApplicationProcessUptime` is gone. `+`, `<` and non-ASCII letters are no longer escaped as `\uXXXX` (see [API](#api)).
+**Upgrading from the previews:**
+
+- From 0.2: `ConfigurationsFiles` is now `ConfigurationFiles`. `Auth`, `Sig`, `Sas` and `Jwt` joined the default sensitive connection string keys. Responses carry `Cache-Control: no-store`.
+- From 0.1: `Dut00.AppInfo.Environment` writes the uptime as `Process.Uptime`; the root key `ApplicationProcessUptime` is gone. `+`, `<` and non-ASCII letters are no longer escaped as `\uXXXX` (see [API](#api)).
 
 ## Quick start
 
@@ -150,6 +153,7 @@ app.Run();
 - Keys are PascalCase by default. `AddAppInfo(o => o.KeyNamingPolicy = JsonNamingPolicy.CamelCase)` changes the key format (any `JsonNamingPolicy` works). `o.JsonSerializerOptions` controls how values are serialized.
 - Characters such as `+`, `<`, `'` and non-ASCII letters are written as-is (`"1.0.5+a1b2c3d"`, not `"1.0.5\u002Ba1b2c3d"`), because the response is JSON for people and tools, not HTML. For the strict escaping, set `o.JsonSerializerOptions.Encoder = JavaScriptEncoder.Default`.
 - `MapAppInfo` can be called more than once with different patterns.
+- Native AOT and trimming aren't supported yet: values are serialized with reflection-based System.Text.Json.
 
 ## Security
 
@@ -227,11 +231,11 @@ dotnet run --project samples/Dut00.AppInfo.Sample.Api -p:UseLocalPackages=true
 Releases are published to nuget.org by `.github/workflows/release.yml` when a version tag is pushed. It uses nuget.org Trusted Publishing, so no API key is stored in the repo.
 
 ```bash
-git tag v0.2.0-preview.1
-git push origin v0.2.0-preview.1
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
-The workflow tests, packs with the tag's version, pushes the packages and symbols to nuget.org and creates a GitHub release. A tag with a suffix (`-preview.1`, `-rc.1`) becomes a prerelease. **The tag decides the published version**; `AppInfoPackageVersion` in `Directory.Build.props` is only the default for local packs.
+The workflow tests, packs with the tag's version, pushes the packages and symbols to nuget.org and creates a GitHub release. A tag with a suffix (`-preview.1`, `-rc.1`) becomes a prerelease. Pack runs package validation; once 1.0.0 is published, set `PackageValidationBaselineVersion` to `1.0.0` in `Directory.Build.props` so breaking API changes fail the build. **The tag decides the published version**; `AppInfoPackageVersion` in `Directory.Build.props` is only the default for local packs.
 
 One-time setup:
 

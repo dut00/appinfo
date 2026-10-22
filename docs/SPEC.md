@@ -1,6 +1,6 @@
 # Dut00.AppInfo – Specification
 
-Version: 0.2 (draft) · Status: v0.2 implemented
+Version: 1.0 · Status: implemented
 
 This document defines **what** Dut00.AppInfo does: public API, response contract and behavior.
 **How** it is built is described in [PLAN.md](PLAN.md). The original notes are in [draft.md](draft.md).
@@ -33,6 +33,7 @@ Typical questions it answers:
 - Supported target frameworks: `net8.0`, `net9.0`, `net10.0`.
 - All packages share one version number.
 - No package depends on anything beyond `Dut00.AppInfo` and the ASP.NET Core shared framework.
+- From 1.0 the public API and the response contract follow SemVer: renaming or removing a key, changing its type or meaning, or a breaking API change needs a new major version. New keys, new packages and stricter masking are not breaking.
 
 ## 3. Public API
 
@@ -142,7 +143,7 @@ Errors follow ASP.NET Core defaults:
 | `Owner` | string | core (`WithOwner`) | `WithOwner(owner)` | Left out unless `WithOwner` is called. Always a string: further owner details, if ever added, go in separate keys |
 | *custom* | any JSON-serializable value | core (`WithProperty`) | user value or factory | |
 | `ConfigurationFiles` | string[] | Configuration | File-based configuration providers | Absolute physical paths, in load order |
-| `Process` | object | Environment | The current process | `Id` (number, `System.Environment.ProcessId`); `StartTime` (string \| null: `Process.StartTime` as a preformatted UTC string in the round-trip format `"O"`, always 7 fraction digits and `Z`, e.g. `"2026-10-20T08:00:00.1234567Z"`, unaffected by custom JSON converters; `null` when the platform doesn't expose it); `Uptime` (string \| null, TimeSpan constant format `[d.]hh:mm:ss[.fffffff]`: now − start time, computed per request with the registered `TimeProvider`, `TimeProvider.System` by default; days and fractions are left out when zero; a clock behind the start time reports `00:00:00`; `null` when the start time is unknown). Replaces the v1 root key `ApplicationProcessUptime` |
+| `Process` | object | Environment | The current process | `Id` (number, `System.Environment.ProcessId`); `StartTime` (string \| null: `Process.StartTime` as a preformatted UTC string in the round-trip format `"O"`, always 7 fraction digits and `Z`, e.g. `"2026-10-20T08:00:00.1234567Z"`, unaffected by custom JSON converters; `null` when the platform doesn't expose it); `Uptime` (string \| null, TimeSpan constant format `[d.]hh:mm:ss[.fffffff]`: now − start time, computed per request with the registered `TimeProvider`, `TimeProvider.System` by default; days and fractions are left out when zero; a clock behind the start time reports `00:00:00`; `null` when the start time is unknown). Replaced the 0.1 root key `ApplicationProcessUptime` |
 | `HostName` | string | Environment | `System.Environment.MachineName` | |
 | `ContentRootPath` | string | Environment | `IHostEnvironment.ContentRootPath` | |
 | `AssemblyLocation` | string \| null | Environment | Entry assembly `Location` | `null` when there is none, for example in a single-file app |
@@ -308,4 +309,5 @@ Connection string names are user data and are emitted as-is, regardless of `KeyN
 - An HTML UI. The endpoint is JSON only.
 - Writing or changing configuration.
 - Querying external systems (the Kubernetes API, cloud metadata endpoints, git) at request time.
-- (After v1: CI and a tag-triggered workflow that publishes releases to nuget.org were added; see the README. v0.2 adds the Build, Runtime, Container and Server packages and groups the process fields under `Process`.)
+- Native AOT and trimming in 1.0: values are serialized with reflection-based System.Text.Json. Support is planned for a later release (PLAN.md, "After 1.0").
+- (After v1: CI and a tag-triggered workflow that publishes releases to nuget.org were added; see the README. v0.2 adds the Build, Runtime, Container and Server packages and groups the process fields under `Process`. 1.0 renames `ConfigurationsFiles` to `ConfigurationFiles`, adds `Cache-Control: no-store` and more default sensitive keys, and freezes the contract.)

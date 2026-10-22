@@ -1,7 +1,7 @@
 # Plan: Dut00.AppInfo – NuGet package family exposing an `/appinfo` endpoint
 
 ## Context
-Status: **steps 1–11 are implemented** (v1, released as `0.1.0-preview.*`). **v0.2: steps 12–18 are implemented**: four new packages (Build, Runtime, Container, Server) and the `Process` group in Environment, to be released by tagging `v0.2.0-preview.1`. The repo started with only `draft.md` (Polish notes). Goal: a family of NuGet packages, structured like Xabaril/AspNetCore.Diagnostics.HealthChecks, that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the application (name, version, environment, owner, …) and can be extended through separate packages.
+Status: **steps 1–11 are implemented** (v1, released as `0.1.0-preview.*`). **v0.2: steps 12–18 are implemented**: four new packages (Build, Runtime, Container, Server) and the `Process` group in Environment, released as `0.2.0-preview.1`. **1.0: step 19 is implemented**, to be released by tagging `v1.0.0`. The repo started with only `draft.md` (Polish notes). Goal: a family of NuGet packages, structured like Xabaril/AspNetCore.Diagnostics.HealthChecks, that adds an `/appinfo` endpoint to ASP.NET Core apps. The endpoint returns JSON describing the application (name, version, environment, owner, …) and can be extended through separate packages.
 
 **All code, comments, XML docs, READMEs and this plan are written in English.**
 
@@ -106,7 +106,7 @@ Each extension is a separate csproj with a ProjectReference to core (packed as a
   - `AssemblyLocation`: `Assembly.GetEntryAssembly()?.Location`, or `null` when empty (single-file apps)
 - **Dut00.AppInfo.ConnectionStrings**: `WithConnectionStrings(Action<ConnectionStringsOptions>? configure = null)` adds `ConnectionStrings: { "<name>": "<masked value>" }`, read from `IConfiguration.GetSection("ConnectionStrings")`.
   - Masking parses each value with `DbConnectionStringBuilder`. Keys that contain an entry of `SensitiveKeys` get the value `***`, and so do values that hide a secret (nested `Password=` pairs, URLs with credentials or a query). See SPEC §5 for the full fail-closed rules.
-  - Default `SensitiveKeys` (case-insensitive, matched as substrings): Password, Pwd, PSW, Pass, User ID, UID, User, Username, Key, AccountKey, SharedAccessKey, SharedAccessSignature, AccessKey, ApiKey, Secret, Token, Credential, Authorization, Signature, Bearer.
+  - Default `SensitiveKeys` (case-insensitive, matched as substrings): Password, Pwd, PSW, Pass, User ID, UID, User, Username, Key, AccountKey, SharedAccessKey, SharedAccessSignature, AccessKey, ApiKey, Secret, Token, Credential, Authorization, Signature, Bearer, and since 1.0 Auth, Sig, Sas, Jwt.
   - If a value can't be parsed, is URI-style, isn't in `key=value;` format (for example Redis) or has a split ODBC brace, the whole value becomes `***`.
   - Both `SensitiveKeys` and the mask string can be changed in options.
 
@@ -114,7 +114,7 @@ Each extension is a separate csproj with a ProjectReference to core (packed as a
 The contract (field names, sources, precedence, `null` rules) is in SPEC §2, §4.2, §7 and §8. Implementation notes:
 
 - **Same skeleton as v1 extensions**: csproj with a ProjectReference to core, `<Name>AppInfoBuilderExtensions` in the package namespace, options class where needed, contributor and helpers in `Internal`, package `README.md`, a test project, a line in the slnx. Contributors are registered with `TryAddEnumerable` as singletons when they hold no per-request state.
-- **Groups are typed**: each group (`Process`, `Build`, `Runtime`, `Container`) is an internal sealed record serialized by `System.Text.Json`, so property order is the declaration order and `KeyNamingPolicy` (via `PropertyNamingPolicy`) applies to nested names without extra code. Values that must keep an exact format are stored preformatted as strings. Consequence: apps that disable reflection-based serialization (trimmed/AOT with a source-generated-only resolver) can't serialize the groups; AOT isn't a goal.
+- **Groups are typed**: each group (`Process`, `Build`, `Runtime`, `Container`) is an internal sealed record serialized by `System.Text.Json`, so property order is the declaration order and `KeyNamingPolicy` (via `PropertyNamingPolicy`) applies to nested names without extra code. Values that must keep an exact format are stored preformatted as strings. Consequence: apps that disable reflection-based serialization (trimmed/AOT with a source-generated-only resolver) can't serialize the groups; AOT support is planned after 1.0 (see "After 1.0").
 - **Testable host access**: environment variables, files and the entry assembly's build attributes are read through small internal seams (an internal type with a static `Current`, resolved as `GetService<T>() ?? T.Current`), used only where a test can't control the input otherwise, which tests register to replace. Under Microsoft.Testing.Platform the entry assembly is the test project, so build attributes can't be varied any other way. Tests never set real environment variables, because tests run in parallel and share the process.
 - **Environment** (`WithEnvironmentDetails`): replaces the root key `ApplicationProcessUptime` with the `Process` group (`Id`, `StartTime`, `Uptime`), first among its keys. The process start time is read once into a static `DateTimeOffset?` (null when the platform doesn't expose it, which makes both `StartTime` and `Uptime` null); the v1 `ProcessStartTime` DI seam and its first-use fallback are gone, because tests control the uptime through `FakeTimeProvider` relative to the real start time. `StartTime` is written as a string, `UtcDateTime.ToString("O", CultureInfo.InvariantCulture)` (System.Text.Json would trim fraction digits, and a `DateTimeOffset` would end in `+00:00`).
 - **Build** (`WithBuildDetails`): `BuildDetailsOptions { ConfigurationSection = "Build", CommitEnvironmentVariables, BranchEnvironmentVariables, BuildIdEnvironmentVariables }`. Entry assembly attributes come from an internal `BuildAssemblyInfo(string? InformationalVersion, IReadOnlyDictionary<string, string> Metadata)` seam whose `Current` is read once; configuration and environment variables per request. The commit fallback parses the `+` suffix of `InformationalVersion`. The package README shows how to stamp `AssemblyMetadata` from CI (GitHub Actions, Azure DevOps, GitLab).
@@ -174,12 +174,30 @@ Each package step includes: the package (csproj, API, options, contributor, pack
 17. **Server package** (`Dut00.AppInfo.Server`): `Urls`; check by hand with `dotnet run` that Kestrel reports the sample's address.
 18. **Documentation and release prep**: root README (packages table, install commands, API table, example response, security note), `CLAUDE.md` layout, the code-reviewer checklist (SPEC §7, §8), SPEC status, `AppInfoPackageVersion` = `0.2.0`. Then pack and verify 8 packages; release by tagging `v0.2.0-preview.1` (the Trusted Publishing pattern `Dut00.AppInfo*` already covers the new IDs).
 
+### 1.0 step
+19. **Release prep for 1.0**, after a full review of the solution, one commit per change:
+    - rename `ConfigurationsFiles` to `ConfigurationFiles` (a typo from the draft; 1.0 freezes the contract);
+    - fix `KeyNamingPolicy`: applied through an `IPostConfigureOptions` copy instead of being written into the assigned `JsonSerializerOptions`, which threw on read-only instances and made every request return 500;
+    - `Cache-Control: no-store` on the response;
+    - default `SensitiveKeys` gain `Auth`, `Sig`, `Sas`, `Jwt`;
+    - `EnablePackageValidation` (set `PackageValidationBaselineVersion` to `1.0.0` once it is published);
+    - documentation (README without `--prerelease`, upgrade notes, SPEC 1.0, AOT moved to "After 1.0"), `AppInfoPackageVersion` = `1.0.0`. Release by tagging `v1.0.0`.
+
 ## Verification
 1. `dotnet build -c Release` builds green for net8.0, net9.0 and net10.0. SDK 10 can build net9.0 without the net9 runtime.
 2. `dotnet test` passes on net8.0 and net10.0.
 3. `dotnet run --project samples/Dut00.AppInfo.Sample.Api`, then `curl http://localhost:5080/appinfo`: the JSON matches the draft and the password is masked. After v0.2 it has `Process` instead of `ApplicationProcessUptime`, and also `Build` (stamped commit), `Runtime`, `Container` (`IsContainer: false` locally) and `Urls` with `http://localhost:5080`.
 4. `pwsh ./build/pack.ps1` produces 4 `.nupkg` and 4 `.snupkg` files in `./artifacts` (8 + 8 after v0.2). Inspect them for lib/net8.0, net9.0 and net10.0, the README, and the dependency on Dut00.AppInfo.
 5. `dotnet run --project samples/Dut00.AppInfo.Sample.Api -p:UseLocalPackages=true`: the sample runs against the local-feed packages.
+
+## After 1.0
+- **Native AOT and trimming** (deferred from 1.0). Today `MapAppInfo` serializes with reflection-based System.Text.Json (`SerializeToNode(object, Type, ...)`, `WriteAsJsonAsync`), so an app with `PublishAot` or `JsonSerializerIsReflectionEnabledByDefault=false` fails at request time, and the trim analyzer reports IL2026/IL3050 in the core and IL2091 on `WithContributor<T>`. Plan:
+  - `[DynamicallyAccessedMembers(PublicConstructors)]` on the `T` of `WithContributor<T>`;
+  - a source-generated `JsonSerializerContext` for the internal groups (`ProcessDetails`, `BuildDetails`, `RuntimeDetails`, `ContainerDetails`) and the built-in values (strings, `string[]`, `Dictionary<string, string>`);
+  - serialize every value through `JsonSerializerOptions.GetTypeInfo(value.GetType())`, with a resolver chain of the internal context, the user's `TypeInfoResolver` and, only when reflection is enabled, `DefaultJsonTypeInfoResolver`; custom values then need the user's own context;
+  - `IsAotCompatible` on the `src` projects, so new warnings fail the build, and a `PublishAot` sample or test that calls `/appinfo`;
+  - `Assembly.Location` (IL3000) is already handled: single-file apps get `null`.
+- Once 1.0.0 is on nuget.org: `PackageValidationBaselineVersion` = `1.0.0`.
 
 ## Out of scope for v1
 Dut00.AppInfo.Serilog (`Serilog:WriteTo` section with masking) was planned for after v1, then dropped. (CI, Dependabot and the nuget.org release workflow were added after v1.)
