@@ -70,6 +70,11 @@ public sealed class ConnectionStringMaskerTests
     [InlineData("Proxy Password=S3cr3t;Host=db", "Proxy Password=***;Host=db")]
     [InlineData("SSL Password=S3cr3t;Host=db", "SSL Password=***;Host=db")]
     [InlineData("ClientSecret=S3cr3t;Host=db", "ClientSecret=***;Host=db")]
+    [InlineData("Auth=S3cr3t;Host=db", "Auth=***;Host=db")]
+    [InlineData("Auth Code=S3cr3t;Host=db", "Auth Code=***;Host=db")]
+    [InlineData("Sig=S3cr3t;Host=db", "Sig=***;Host=db")]
+    [InlineData("Sas=sv=1&sig=S3cr3t;Host=db", "Sas=***;Host=db")]
+    [InlineData("Jwt=S3cr3t;Host=db", "Jwt=***;Host=db")]
     public void KeyContainingASensitiveWord_IsMasked(string value, string expected)
     {
         Mask(value).ShouldBe(expected);
@@ -157,6 +162,15 @@ public sealed class ConnectionStringMaskerTests
         Mask("Driver={ODBC Driver 18 for SQL Server};Server=db;UID=u;PWD={ab;cd=S3cr3t}").ShouldBe("***");
     }
 
+    [Theory]
+    [InlineData("Authentication=Active Directory Default;Host=db", "Authentication=***;Host=db")]
+    [InlineData("Sasl Mechanism=PLAIN;Host=db", "Sasl Mechanism=***;Host=db")]
+    public void HarmlessKeyContainingAShortSensitiveWord_IsMasked(string value, string expected)
+    {
+        // Over-masking is accepted (SPEC §5).
+        Mask(value).ShouldBe(expected);
+    }
+
     [Fact]
     public void HostNameContainingASensitiveWord_IsKept()
     {
@@ -212,6 +226,10 @@ public sealed class ConnectionStringMaskerTests
         "Host=db;Token=S3cr3t",
         "Host=db;AccessKey=S3cr3t",
         "Host=db;Secret=S3cr3t",
+        "Host=db;Auth=S3cr3t",
+        "Host=db;Sig=S3cr3t",
+        "Host=db;Sas=sv=1&sig=S3cr3t",
+        "Host=db;Jwt=S3cr3t",
         "cache:6379,password=S3cr3t",
         "mongodb://u:S3cr3t@h/db?x=y",
         "Server=db;Password=S3cr3t;broken",

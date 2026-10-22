@@ -15,8 +15,10 @@ public sealed class ConnectionStringsOptions
     /// <remarks>
     /// Defaults: <c>Password</c>, <c>Pwd</c>, <c>PSW</c>, <c>Pass</c>, <c>User ID</c>, <c>UID</c>, <c>User</c>, <c>Username</c>,
     /// <c>Key</c>, <c>AccountKey</c>, <c>SharedAccessKey</c>, <c>SharedAccessSignature</c>, <c>AccessKey</c>, <c>ApiKey</c>,
-    /// <c>Secret</c>, <c>Token</c>, <c>Credential</c>, <c>Authorization</c>, <c>Signature</c>, <c>Bearer</c>. Because matching is by substring, <c>Key</c> also covers
-    /// <c>AppKey</c> and <c>private_key</c>, and <c>Pass</c> covers <c>Passphrase</c> and <c>Passcode</c>.
+    /// <c>Secret</c>, <c>Token</c>, <c>Credential</c>, <c>Authorization</c>, <c>Signature</c>, <c>Bearer</c>, <c>Auth</c>, <c>Sig</c>,
+    /// <c>Sas</c>, <c>Jwt</c>. Because matching is by substring, <c>Key</c> also covers <c>AppKey</c> and <c>private_key</c>,
+    /// <c>Pass</c> covers <c>Passphrase</c> and <c>Passcode</c>, and <c>Auth</c> covers <c>Auth Code</c> and <c>AuthToken</c>.
+    /// Short words also mask harmless keys such as <c>Authentication</c> or <c>Sasl Mechanism</c>; that is accepted.
     /// Add to the set to mask more keys. Removing entries can expose secrets.
     /// </remarks>
     public ISet<string> SensitiveKeys { get; } = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -41,6 +43,10 @@ public sealed class ConnectionStringsOptions
         "Authorization",
         "Signature",
         "Bearer",
+        "Auth",
+        "Sig",
+        "Sas",
+        "Jwt",
     };
 
     /// <summary>

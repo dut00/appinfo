@@ -235,19 +235,19 @@ Every value under `ConnectionStrings:*` that has a value of its own is masked. N
    - any parsed key doesn't look like a connection string key (letters, digits, spaces, `.`, `-`, `_`). This catches formats such as Redis `host:6379,password=...`, which the builder would otherwise read as one odd key;
    - any parsed value that starts with `{` isn't a properly closed ODBC braced value (it must end with `}`, and no single `}` may remain inside once `}}` escapes are removed), or a value ends with `}` without starting with `{`. The builder doesn't treat braces as quoting, so `PWD={ab;cd=secret}` or `PWD={ab}};cd={secret}` would otherwise be split and print the second half;
    - anything else goes wrong while masking.
-3. A **key's value** is masked when the key **contains** any entry of `SensitiveKeys`, ignoring case. `Password` therefore also covers `Proxy Password` and `SSL Password`, and `Key` covers `AppKey`, `Application Key` and `private_key`. Short entries also mask harmless keys such as `User Instance` or `KeyFile` (over-masking is accepted).
+3. A **key's value** is masked when the key **contains** any entry of `SensitiveKeys`, ignoring case. `Password` therefore also covers `Proxy Password` and `SSL Password`, and `Key` covers `AppKey`, `Application Key` and `private_key`. `Auth` covers `Auth Code` and `AuthToken`, `Sas` covers a bare `Sas=sv=...&sig=...`. Short entries also mask harmless keys such as `User Instance`, `KeyFile`, `Authentication` or `Sasl Mechanism` (over-masking is accepted).
 4. Any other value is masked when it hides a secret:
    - it contains a sensitive entry followed (after optional spaces or quotes) by `=` or `:`, i.e. a nested connection string such as `Extended Properties="Excel 12.0;Password=xyz"`;
    - it contains `@` anywhere: credentials in an address (`user:pass@host`, `user/pass@host`, `https://user:pass@host`, ...);
    - it contains `?` or `#` together with `/` or `:`: a query or fragment in an address, such as a SAS URL in `BlobEndpoint=https://...?sv=...&sig=...`;
    - it is an absolute URI with user info, a query or a fragment.
    - These rules work on the text, so addresses that aren't valid URIs are caught too. They over-mask some harmless values, for example `Application Name=app@prod`, `Host=hockey:5432` (contains `Key` + `:`) or SQLite's `Data Source=file:app.db?mode=memory&cache=shared`; that is accepted.
-   - Known limitations: a secret in the **path** of an address (for example a webhook token in `https://host/api/webhooks/1/TOKEN`), or a secret under a key name that no `SensitiveKeys` entry covers (for example `Sas=sv=...&sig=...` or `Cert=-----BEGIN PRIVATE KEY-----`), is not detected. Add such keys to `SensitiveKeys`, or don't keep these values under `ConnectionStrings`. Unicode lookalikes of `@`, `=` or `/` are not treated as separators, matching how providers parse them.
+   - Known limitations: a secret in the **path** of an address (for example a webhook token in `https://host/api/webhooks/1/TOKEN`), or a secret under a key name that no `SensitiveKeys` entry covers (for example `Cert=-----BEGIN PRIVATE KEY-----`), is not detected. Add such keys to `SensitiveKeys`, or don't keep these values under `ConnectionStrings`. Unicode lookalikes of `@`, `=` or `/` are not treated as separators, matching how providers parse them.
 5. The result is rebuilt from the parsed pairs. Key casing and order are kept (the original spelling of each key is restored only when it equals the parsed key ignoring case); spacing and quoting may be normalized. When a key appears twice, only the last value is kept, masked by the same rules.
 
 | Option | Default |
 | --- | --- |
-| `SensitiveKeys` | `Password`, `Pwd`, `PSW`, `Pass`, `User ID`, `UID`, `User`, `Username`, `Key`, `AccountKey`, `SharedAccessKey`, `SharedAccessSignature`, `AccessKey`, `ApiKey`, `Secret`, `Token`, `Credential`, `Authorization`, `Signature`, `Bearer` (case-insensitive set, matched as substrings; blank entries are ignored) |
+| `SensitiveKeys` | `Password`, `Pwd`, `PSW`, `Pass`, `User ID`, `UID`, `User`, `Username`, `Key`, `AccountKey`, `SharedAccessKey`, `SharedAccessSignature`, `AccessKey`, `ApiKey`, `Secret`, `Token`, `Credential`, `Authorization`, `Signature`, `Bearer`, `Auth`, `Sig`, `Sas`, `Jwt` (case-insensitive set, matched as substrings; blank entries are ignored) |
 | `Mask` | `***` (must not be `null`) |
 
 Connection string names are user data and are emitted as-is, regardless of `KeyNamingPolicy` (§4.4).

@@ -122,7 +122,8 @@ public sealed class ConnectionStringsTests
         options.Mask.ShouldBe("***");
         options.SensitiveKeys.ShouldBe(
             ["Password", "Pwd", "PSW", "Pass", "User ID", "UID", "User", "Username", "Key", "AccountKey", "SharedAccessKey",
-             "SharedAccessSignature", "AccessKey", "ApiKey", "Secret", "Token", "Credential", "Authorization", "Signature", "Bearer"],
+             "SharedAccessSignature", "AccessKey", "ApiKey", "Secret", "Token", "Credential", "Authorization", "Signature", "Bearer",
+             "Auth", "Sig", "Sas", "Jwt"],
             ignoreOrder: true);
         options.SensitiveKeys.Contains("PASSWORD").ShouldBeTrue();
         Should.Throw<ArgumentNullException>(() => options.Mask = null!);
