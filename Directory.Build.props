@@ -16,7 +16,7 @@
        and packs: the next version with a -dev suffix, which is never published, so a local pack never has the ID and
        version of a package on nuget.org (such as the package validation baseline). Bump it after each release. -->
   <PropertyGroup>
-    <AppInfoPackageVersion>1.0.1-dev</AppInfoPackageVersion>
+    <AppInfoPackageVersion>1.0.2-dev</AppInfoPackageVersion>
     <Version>$(AppInfoPackageVersion)</Version>
     <Authors>Kuba</Authors>
     <Copyright>Copyright (c) 2026 Kuba</Copyright>
@@ -43,7 +43,7 @@
          empty until its first release. An intentional break in a major release needs CompatibilitySuppressions.xml
          (-p:ApiCompatGenerateSuppressionFile=true) in the same change. -->
     <EnablePackageValidation>true</EnablePackageValidation>
-    <PackageValidationBaselineVersion>1.0.0</PackageValidationBaselineVersion>
+    <PackageValidationBaselineVersion>1.0.1</PackageValidationBaselineVersion>
   </PropertyGroup>
 
   <ItemGroup Condition="'$(PackageReadmeFile)' == 'README.md' And Exists('$(MSBuildProjectDirectory)/README.md')">

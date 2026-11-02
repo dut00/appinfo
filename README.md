@@ -231,11 +231,11 @@ dotnet run --project samples/Dut00.AppInfo.Sample.Api -p:UseLocalPackages=true
 Releases are published to nuget.org by `.github/workflows/release.yml` when a version tag is pushed. It uses nuget.org Trusted Publishing, so no API key is stored in the repo.
 
 ```bash
-git tag v1.0.1
-git push origin v1.0.1
+git tag v1.0.2
+git push origin v1.0.2
 ```
 
-The workflow tests, packs with the tag's version, pushes the packages and symbols to nuget.org and creates a GitHub release. A tag with a suffix (`-preview.1`, `-rc.1`) becomes a prerelease. Pack runs package validation against the last released packages on nuget.org (`PackageValidationBaselineVersion` in `Directory.Build.props`), so a breaking API change fails the build. **The tag decides the published version**; `AppInfoPackageVersion` in `Directory.Build.props` is only the default for local builds and packs. After a release, bump both versions in `Directory.Build.props`: after `v1.0.1`, `AppInfoPackageVersion` = `1.0.2-dev` and `PackageValidationBaselineVersion` = `1.0.1`.
+The workflow tests, packs with the tag's version, pushes the packages and symbols to nuget.org and creates a GitHub release. A tag with a suffix (`-preview.1`, `-rc.1`) becomes a prerelease. Pack runs package validation against the last released packages on nuget.org (`PackageValidationBaselineVersion` in `Directory.Build.props`), so a breaking API change fails the build. **The tag decides the published version**; `AppInfoPackageVersion` in `Directory.Build.props` is only the default for local builds and packs. After a release, bump both versions in `Directory.Build.props`: after `v1.0.2`, `AppInfoPackageVersion` = `1.0.3-dev` and `PackageValidationBaselineVersion` = `1.0.2`.
 
 One-time setup:
 
