@@ -228,21 +228,24 @@ dotnet run --project samples/Dut00.AppInfo.Sample.Api -p:UseLocalPackages=true
 
 ### Releasing
 
-Releases are published to nuget.org by `.github/workflows/release.yml` when a version tag is pushed. It uses nuget.org Trusted Publishing, so no API key is stored in the repo.
+Releases are published to nuget.org by `.github/workflows/release.yml`. It uses nuget.org Trusted Publishing, so no API key is stored in the repo. Start it in one of two ways:
 
-```bash
-git tag v1.0.3
-git push origin v1.0.3
-```
+- **From GitHub**: Actions > Release > Run workflow, keep the default branch selected and enter the version without the `v` (for example `1.0.3`). The run refuses other branches and versions whose tag already exists on another commit. After the tests and pack it creates the `v1.0.3` tag on the commit it built, before pushing to nuget.org. If a later step fails, re-run the job: it carries on with the existing tag, and packages already on nuget.org are skipped.
+- **With a tag**:
 
-The workflow tests, packs with the tag's version, pushes the packages and symbols to nuget.org and creates a GitHub release. A tag with a suffix (`-preview.1`, `-rc.1`) becomes a prerelease. Pack runs package validation against the last released packages on nuget.org (`PackageValidationBaselineVersion` in `Directory.Build.props`), so a breaking API change fails the build. **The tag decides the published version**; `AppInfoPackageVersion` in `Directory.Build.props` is only the default for local builds and packs. After a release, bump both versions in `Directory.Build.props`: after `v1.0.3`, `AppInfoPackageVersion` = `1.0.4-dev` and `PackageValidationBaselineVersion` = `1.0.3`.
+  ```bash
+  git tag v1.0.3
+  git push origin v1.0.3
+  ```
+
+The workflow tests, packs with that version, pushes the packages and symbols to nuget.org and creates a GitHub release. A version with a suffix (`-preview.1`, `-rc.1`) becomes a prerelease. Pack runs package validation against the last released packages on nuget.org (`PackageValidationBaselineVersion` in `Directory.Build.props`), so a breaking API change fails the build. **The tag or the entered version decides the published version**; `AppInfoPackageVersion` in `Directory.Build.props` is only the default for local builds and packs. After a release, bump both versions in `Directory.Build.props`: after `v1.0.3`, `AppInfoPackageVersion` = `1.0.4-dev` and `PackageValidationBaselineVersion` = `1.0.3`.
 
 One-time setup:
 
 1. **nuget.org** > Trusted Publishing > add a policy: Repository Owner `dut00`, Repository `appinfo`, Workflow File `release.yml` (file name only), Environment `nuget`. Its scope must allow **pushing new packages** (for example the pattern `Dut00.AppInfo*`), because the first release creates the package IDs.
-2. **GitHub** > Settings > Environments > `nuget`: add a required reviewer. Under "Deployment branches and tags", choose "No restriction" or add a tag rule `v*`; otherwise tag-triggered runs are blocked.
+2. **GitHub** > Settings > Environments > `nuget`: add a required reviewer. Under "Deployment branches and tags", choose "Selected branches and tags" and add a tag rule `v*` and a branch rule for the default branch. This rule is what actually restricts releases: a manual run uses the workflow file from the branch it is started on, so the workflow's own default-branch check is only a second layer.
 3. **GitHub** > Settings > Secrets and variables > Actions > Variables: `NUGET_USER` = the nuget.org profile name (not the e-mail).
-4. Recommended: a tag ruleset (Settings > Rules) that restricts creating, updating and deleting `v*` tags.
+4. Recommended: a tag ruleset (Settings > Rules) that restricts creating, updating and deleting `v*` tags. Manual runs create the tag with `GITHUB_TOKEN`, so the ruleset must let GitHub Actions through (its bypass list); otherwise use tag pushes only. A blocked run stops at "Create the tag", before anything is published.
 
 ## License
 

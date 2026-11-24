@@ -40,7 +40,7 @@ appinfo-nuget/
 ├─ docs/SPEC.md                 # behavioral contract (wins over this plan)
 ├─ docs/draft.md                # original notes (moved from root)
 ├─ .github/                     # workflows/ci.yml (build + test on Linux, Windows, macOS; pack),
-│                               # workflows/release.yml (v* tag -> nuget.org via Trusted Publishing), dependabot.yml
+│                               # workflows/release.yml (v* tag or manual run -> nuget.org via Trusted Publishing), dependabot.yml
 ├─ assets/icon.png              # package icon (added to packages only when present)
 ├─ build/pack.ps1               # dotnet pack -c Release -o ./artifacts (+ clears local copies of dut00.appinfo* from the NuGet cache)
 ├─ src/

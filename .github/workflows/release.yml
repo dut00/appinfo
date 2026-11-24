@@ -1,11 +1,19 @@
 name: Release
 
-# Publishes the packages to nuget.org when a version tag is pushed:
-#   git tag v1.0.1 && git push origin v1.0.1
-# A tag with a suffix (-preview.1, -rc.1, ...) becomes a NuGet prerelease and a GitHub prerelease.
+# Publishes the packages to nuget.org, started in one of two ways:
+#   - push a version tag:  git tag v1.0.1 && git push origin v1.0.1
+#   - run it from GitHub (Actions > Release > Run workflow) on the default branch with a version such as 1.0.1;
+#     the run creates the v<version> tag on the commit it built, before pushing to nuget.org.
+# A version with a suffix (-preview.1, -rc.1, ...) becomes a NuGet prerelease and a GitHub prerelease.
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to publish, without the v prefix (for example 1.0.3 or 1.1.0-preview.1)'
+        required: true
+        type: string
 
 permissions:
   contents: write # create the GitHub release
@@ -34,17 +42,52 @@ jobs:
           global-json-file: global.json
           dotnet-version: 8.0.x
 
-      - name: Read the version from the tag
+      - name: Read the version
         id: version
         shell: bash
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
-          version="${GITHUB_REF_NAME#v}"
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            # A manual release always comes from the default branch, so it never publishes unmerged code.
+            if [[ "$GITHUB_REF" != "refs/heads/$DEFAULT_BRANCH" ]]; then
+              echo "::error::Run the release from '$DEFAULT_BRANCH', not '$GITHUB_REF_NAME'."
+              exit 1
+            fi
+            version="${INPUT_VERSION#v}" # tolerate a typed v prefix
+            source="Version '$INPUT_VERSION'"
+          else
+            version="${GITHUB_REF_NAME#v}"
+            source="Tag '$GITHUB_REF_NAME'"
+          fi
           # SemVer without build metadata: no leading zeros, no empty prerelease identifiers.
           if [[ ! "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$ ]]; then
-            echo "::error::Tag '$GITHUB_REF_NAME' is not v<major>.<minor>.<patch>[-suffix]."
+            echo "::error::$source is not [v]<major>.<minor>.<patch>[-suffix]."
             exit 1
           fi
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            # Fail early instead of after the tests. "Create the tag" below is the real guard.
+            # --exit-code: 0 = the tag exists, 2 = it doesn't, anything else = the check itself failed.
+            # A tag on this very commit is left by an earlier failed run of this release: carry on, so
+            # re-running finishes it (packages already on nuget.org are skipped).
+            rc=0
+            existing="$(git ls-remote --exit-code --tags origin "refs/tags/v$version")" || rc=$?
+            if [[ $rc -eq 0 ]]; then
+              if [[ "${existing%%[[:space:]]*}" == "$GITHUB_SHA" ]]; then
+                echo "::notice::Tag v$version already points at $GITHUB_SHA, resuming that release."
+                echo "tag_exists=true" >> "$GITHUB_OUTPUT"
+              else
+                echo "::error::Tag v$version already exists on another commit. Pick a new version."
+                exit 1
+              fi
+            elif [[ $rc -ne 2 ]]; then
+              echo "::error::Could not check whether tag v$version exists (git exit code $rc)."
+              exit 1
+            fi
+          fi
           echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=v$version" >> "$GITHUB_OUTPUT"
           if [[ "$version" == *-* ]]; then
             echo "prerelease=true" >> "$GITHUB_OUTPUT"
           else
@@ -57,6 +100,17 @@ jobs:
       - name: Pack
         shell: pwsh
         run: ./build/pack.ps1 -Version '${{ steps.version.outputs.version }}'
+
+      # Manual runs create the tag on the tested commit before anything reaches nuget.org: the push can't be
+      # undone, so a missing permission, a tag ruleset or a tag created meanwhile must stop the run here.
+      # Creating a ref that already exists fails, so this also settles two runs racing for the same version.
+      # A tag created with GITHUB_TOKEN does not start this workflow again.
+      - name: Create the tag
+        if: github.event_name == 'workflow_dispatch' && steps.version.outputs.tag_exists != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: gh api "repos/$GITHUB_REPOSITORY/git/refs" -f "ref=refs/tags/$TAG" -f "sha=$GITHUB_SHA" > /dev/null
 
       - name: Log in to nuget.org
         id: nuget-login
@@ -93,7 +147,9 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PRERELEASE: ${{ steps.version.outputs.prerelease }}
+          TAG: ${{ steps.version.outputs.tag }}
         run: |
-          flags=(--title "$GITHUB_REF_NAME" --generate-notes --verify-tag)
+          # The tag exists in both cases: pushed by hand, or created by "Create the tag".
+          flags=(--title "$TAG" --generate-notes --verify-tag)
           if [[ "$PRERELEASE" == "true" ]]; then flags+=(--prerelease); fi
-          gh release create "$GITHUB_REF_NAME" artifacts/*.nupkg artifacts/*.snupkg "${flags[@]}"
+          gh release create "$TAG" artifacts/*.nupkg artifacts/*.snupkg "${flags[@]}"
